@@ -1,0 +1,4 @@
+This project aims to eliminate the gap between the latest Amazon Web Service and the pyamazon module.
+
+TODO:
+  - Complete buildURL, check the return dom object.
