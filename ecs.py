@@ -91,6 +91,6 @@ def buildURL(operation, search_index, keywords, license_key, locale, associate):
 ## main functions
 
 if __name__ == "__main__":
-    print buildURL("ItemSearch", "Books", "Python", getLicenseKey(), "us", None );
+    print buildURL("ItemSearch", "Books", "Python", getLicenseKey(), getLocale(), None );
 
     
