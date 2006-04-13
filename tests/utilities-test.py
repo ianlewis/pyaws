@@ -5,7 +5,7 @@ import sys
 sys.path.append('..')
 import ecs
 
-class utilitiesTest( unittest.TestCase ):
+class UtilitiesTest( unittest.TestCase ):
     def testDefaultLocale(self):
         self.assertEqual( ecs.getLocale(), "us" )
 

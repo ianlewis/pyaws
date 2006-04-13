@@ -49,9 +49,21 @@ _licenseKeys = (
 
 # Exception class
 class AWSException( Exception ) : pass
-class NoLiceseKeyException( AWSException ) : pass
+class NoLicenseKeyException( AWSException ) : pass
 class BadLocaleException( AWSException ) : pass
-class RuntimeException( Exception ) : pass
+
+class RuntimeException( Exception ) :
+    def __init__ ( self, msg=None ):
+        self.message = msg
+
+    def getMessage(self):
+        return self.message
+
+    def setMessage(self, msg):
+        self.message = msg
+
+class InvalidParameterValue( RuntimeException ): pass
+
 
 # Utilities functions
 
@@ -85,7 +97,7 @@ def setLicenseKey(license_key=None):
         if rc: 
             LICENSE_KEY = rc;
             return;
-    raise NoLiceseKeyException, ("Please get the license key from  http://www.amazon.com/webservices" )
+    raise NoLicenseKeyException, ("Please get the license key from  http://www.amazon.com/webservices" )
 
 
 def getLicenseKey(license_key = None):
@@ -109,7 +121,23 @@ def buildRequest( argv ):
         if v:
             url += '&%s=%s' % (k,v)
     return url;
+
+
+def buildException( els ):
+    # We just care the first error.
+    error = els[0]
+    class_name = error.childNodes[0].firstChild.data[4:]
+    msg = error.childNodes[1].firstChild.data 
+
+    e = globals()[ class_name ](msg)
+    return e
+
     
+
+
+
+    
+# User interfaces
 
 def ItemLookup( ItemId, IdType=None, AWSAccessKeyId=None ): 
     Operation = "ItemLookup"
@@ -134,12 +162,9 @@ def query( url ):
     usock.close()
 
     errors = dom.getElementsByTagName('Error')
-    l = []
-    m = {}
     if errors:
-        for e in errors:
-            for child in [ x for x in e.childNodes ]:
-                print child.tagName, child.firstChild.data
+        e = buildException( errors )
+        raise e
     
     return dom
 
