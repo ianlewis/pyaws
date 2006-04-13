@@ -18,16 +18,19 @@ TODO:
   - Add more decriptions about this module. 
 """
 
-import urllib, os
+import os, urllib
+import inspect
 
 __author__ = "Kun Xi < kunxi@kunxi.org >"
 __version__ = "0.0.1"
 __license__ = "GPL"
 
 
+# Package-wide variables:
 LICENSE_KEY = None;
 HTTP_PROXY = None
 LOCALE = "us"
+VERSION = "2005-10-05"
 
 _supportedLocales = {
         "us" : (None, "webservices.amazon.com"),   
@@ -44,12 +47,15 @@ _licenseKeys = (
     (lambda key: os.environ.get('AWS_LICENSE_KEY', None))
     )
 
+# Exception class
 class AWSException( Exception ) : pass
-class NoLiceseException( AWSException ) : pass
+class NoLiceseKeyException( AWSException ) : pass
+
+# Utilities functions
 
 def _checkLocaleSupported(locale):
     if not _supportedLocales.has_key(locale):
-        raise AmazonError, ("Unsupported locale. Locale must be one of: %s" %
+        raise AWSException, ("Unsupported locale. Locale must be one of: %s" %
             string.join(_supportedLocales, ", "))
 
 def setLocale(locale):
@@ -58,26 +64,38 @@ def setLocale(locale):
     _checkLocaleSupported(locale)
     LOCALE = locale
 
-def getLocale(locale=None):
+def getLocale():
     """get locale"""
-    return locale or LOCALE
+    return LOCALE
 
-def setLicenseKey(license_key):
-    """set license key"""
-    global LICENSE_KEY
-    LICENSE_KEY = license_key
-
-def getLicenseKey(license_key = None):
-    """get license key
+def setLicenseKey(license_key=None):
+    """set license key
 
     license key can come from any number of locations;
     see module docs for search order"""
+
+    global LICENSE_KEY
     for get in _licenseKeys:
         rc = get(license_key)
         if rc: 
-            return rc
-    raise NoLicenseKey, 'get a license key at http://www.amazon.com/webservices'
+            LICENSE_KEY = rc;
+            return;
+    raise NoLiceseKeyException, ("Please get the license key from  http://www.amazon.com/webservices" )
 
+def getLicenseKey(license_key = None):
+    """get license key"""
+    return LICENSE_KEY
+    
+
+def getVersion():
+    """get version"""
+    return VERSION
+
+def setVersion(version):
+    global VERSION
+    VERSION = version
+    
+	
 def buildURL(operation, search_index, keywords, license_key, locale, associate):
     _checkLocaleSupported(locale)
     url = "http://" + _supportedLocales[locale][1] + "/onca/xml?Service=AWSECommerceService"
@@ -87,10 +105,30 @@ def buildURL(operation, search_index, keywords, license_key, locale, associate):
     url += "&Keywords=%s" % urllib.quote(keywords)
     return url
 
+def buildRequest( argv ):
+    url = "http://" + _supportedLocales[LOCALE][1] + "/onca/xml?Service=AWSECommerceService"
+    for k,v in argv:
+        if not v:
+            url += '&%s=%s' % (k,v)
+    return url;
+    
+
+    
+def rawItemLookup( ItemId ): 
+    Operation = "ItemLookup"
+    AWSAccessKeyId = LICENSE_KEY
+    argv = inspect.getargvalues( inspect.currentframe() )[-1].items();
+    url = buildRequest( argv );
+    return url;
+
+    
+    
 
 ## main functions
 
 if __name__ == "__main__":
-    print buildURL("ItemSearch", "Books", "Python", getLicenseKey(), getLocale(), None );
+    setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
+    print rawItemLookup( "0596002815" );
+    
 
     
