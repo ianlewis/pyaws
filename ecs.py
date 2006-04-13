@@ -49,27 +49,16 @@ _licenseKeys = (
 
 # Exception class
 class AWSException( Exception ) : pass
-class NoLicenseKeyException( AWSException ) : pass
-class BadLocaleException( AWSException ) : pass
-
-class RuntimeException( Exception ) :
-    def __init__ ( self, msg=None ):
-        self.message = msg
-
-    def getMessage(self):
-        return self.message
-
-    def setMessage(self, msg):
-        self.message = msg
-
-class InvalidParameterValue( RuntimeException ): pass
+class NoLicenseKey( AWSException ) : pass
+class BadLocale( AWSException ) : pass
+class InvalidParameterValue( AWSException ): pass
 
 
 # Utilities functions
 
 def _checkLocaleSupported(locale):
     if not _supportedLocales.has_key(locale):
-        raise BadLocaleException, ("Unsupported locale. Locale must be one of: %s" %
+        raise BadLocale, ("Unsupported locale. Locale must be one of: %s" %
             string.join(_supportedLocales, ", "))
 
 
@@ -97,7 +86,7 @@ def setLicenseKey(license_key=None):
         if rc: 
             LICENSE_KEY = rc;
             return;
-    raise NoLicenseKeyException, ("Please get the license key from  http://www.amazon.com/webservices" )
+    raise NoLicenseKey, ("Please get the license key from  http://www.amazon.com/webservices" )
 
 
 def getLicenseKey(license_key = None):
@@ -131,8 +120,6 @@ def buildException( els ):
 
     e = globals()[ class_name ](msg)
     return e
-
-    
 
 
 
