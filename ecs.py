@@ -157,16 +157,3 @@ def query( url ):
 
     
 
-## main functions
-
-if __name__ == "__main__":
-    setLicenseKey("1MGVS72Y8JF7EC7JDZG3")
-    #setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-    url = ItemLookup( "0596002815" )
-    print url
-    dom = query(url)
-    print dom.toprettyxml()
-
-    
-
-    

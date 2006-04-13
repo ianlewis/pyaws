@@ -14,10 +14,10 @@ class UtilitiesTest( unittest.TestCase ):
         self.assertEqual( ecs.getLocale(), "fr" )
 
     def testBadLocale(self):
-        self.assertRaises( ecs.BadLocaleException, ecs.setLocale, "zh" )
+        self.assertRaises( ecs.BadLocale, ecs.setLocale, "zh" )
 
     def testNoLicenseKey(self):
-        self.assertRaises( ecs.NoLicenseKeyException, ecs.setLicenseKey )
+        self.assertRaises( ecs.NoLicenseKey, ecs.setLicenseKey )
 
 if __name__ == "__main__" :
     unittest.main()
