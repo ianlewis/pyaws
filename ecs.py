@@ -18,8 +18,8 @@ TODO:
   - Add more decriptions about this module. 
 """
 
-import os, urllib
-import inspect
+import os, urllib, string, inspect
+from xml.dom import minidom
 
 __author__ = "Kun Xi < kunxi@kunxi.org >"
 __version__ = "0.0.1"
@@ -50,13 +50,16 @@ _licenseKeys = (
 # Exception class
 class AWSException( Exception ) : pass
 class NoLiceseKeyException( AWSException ) : pass
+class BadLocaleException( AWSException ) : pass
+class RuntimeException( Exception ) : pass
 
 # Utilities functions
 
 def _checkLocaleSupported(locale):
     if not _supportedLocales.has_key(locale):
-        raise AWSException, ("Unsupported locale. Locale must be one of: %s" %
+        raise BadLocaleException, ("Unsupported locale. Locale must be one of: %s" %
             string.join(_supportedLocales, ", "))
+
 
 def setLocale(locale):
     """set locale"""
@@ -64,9 +67,11 @@ def setLocale(locale):
     _checkLocaleSupported(locale)
     LOCALE = locale
 
+
 def getLocale():
     """get locale"""
     return LOCALE
+
 
 def setLicenseKey(license_key=None):
     """set license key
@@ -82,6 +87,7 @@ def setLicenseKey(license_key=None):
             return;
     raise NoLiceseKeyException, ("Please get the license key from  http://www.amazon.com/webservices" )
 
+
 def getLicenseKey(license_key = None):
     """get license key"""
     return LICENSE_KEY
@@ -91,44 +97,64 @@ def getVersion():
     """get version"""
     return VERSION
 
+
 def setVersion(version):
     global VERSION
     VERSION = version
     
-	
-def buildURL(operation, search_index, keywords, license_key, locale, associate):
-    _checkLocaleSupported(locale)
-    url = "http://" + _supportedLocales[locale][1] + "/onca/xml?Service=AWSECommerceService"
-    url += "&AWSAccessKeyId=%s" % license_key.strip()
-    url += "&Operation=%s" % operation
-    url += "&SearchIndex=%s" % search_index 
-    url += "&Keywords=%s" % urllib.quote(keywords)
-    return url
 
 def buildRequest( argv ):
     url = "http://" + _supportedLocales[LOCALE][1] + "/onca/xml?Service=AWSECommerceService"
     for k,v in argv:
-        if not v:
+        if v:
             url += '&%s=%s' % (k,v)
     return url;
     
 
-    
-def rawItemLookup( ItemId ): 
+def ItemLookup( ItemId, IdType=None, AWSAccessKeyId=None ): 
     Operation = "ItemLookup"
-    AWSAccessKeyId = LICENSE_KEY
+    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
     argv = inspect.getargvalues( inspect.currentframe() )[-1].items();
     url = buildRequest( argv );
     return url;
 
+
+def ItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
+    Operation = "ItemSearch"
+    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+    Keywords = urllib.quote(Keywords)
+    argv = inspect.getargvalues( inspect.currentframe() )[-1].items();
+    url = buildRequest( argv );
+    return url;
     
+def query( url ):
+    u = urllib.FancyURLopener( HTTP_PROXY )
+    usock = u.open(url)
+    dom = minidom.parse(usock)
+    usock.close()
+
+    errors = dom.getElementsByTagName('Error')
+    l = []
+    m = {}
+    if errors:
+        for e in errors:
+            for child in [ x for x in e.childNodes ]:
+                print child.tagName, child.firstChild.data
+    
+    return dom
+
     
 
 ## main functions
 
 if __name__ == "__main__":
-    setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-    print rawItemLookup( "0596002815" );
+    setLicenseKey("1MGVS72Y8JF7EC7JDZG3")
+    #setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
+    url = ItemLookup( "0596002815" )
+    print url
+    dom = query(url)
+    print dom.toprettyxml()
+
     
 
     
