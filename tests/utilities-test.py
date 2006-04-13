@@ -16,5 +16,8 @@ class utilitiesTest( unittest.TestCase ):
     def testBadLocale(self):
         self.assertRaises( ecs.BadLocaleException, ecs.setLocale, "zh" )
 
+    def testNoLicenseKey(self):
+        self.assertRaises( ecs.NoLicenseKeyException, ecs.setLicenseKey )
+
 if __name__ == "__main__" :
     unittest.main()
