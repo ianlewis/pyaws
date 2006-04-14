@@ -53,6 +53,8 @@ class NoLicenseKey( AWSException ) : pass
 class BadLocale( AWSException ) : pass
 class InvalidParameterValue( AWSException ): pass
 
+class Bag : pass
+
 
 # Utilities functions
 
@@ -142,6 +144,8 @@ def ItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):
     url = buildRequest( argv );
     return url;
     
+# core functions
+
 def query( url ):
     u = urllib.FancyURLopener( HTTP_PROXY )
     usock = u.open(url)
@@ -155,5 +159,37 @@ def query( url ):
     
     return dom
 
-    
 
+def unmarshal(element):
+    rc = Bag()
+    childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
+
+    if childElements:
+        for child in childElements:
+            key = child.tagName
+            if hasattr(rc, key):
+                if type(getattr(rc, key)) <> type([]):
+                    setattr(rc, key, [getattr(rc, key)])
+                setattr(rc, key, getattr(rc, key) + [unmarshal(child)])
+            elif isinstance(child, minidom.Element) :
+                # make the first Details element a key
+                setattr(rc,key,[unmarshal(child)])
+                #dbg: because otherwise 'hasattr' only tests
+                #dbg: on the second occurence: if there's a
+                #dbg: single return to a query, it's not a
+                #dbg: list. This module should always
+                #dbg: return a list of Details objects.
+            else:
+                setattr(rc, key, unmarshal(child))
+    else:
+        rc = "".join([e.data for e in element.childNodes if isinstance(e, minidom.Text)])
+    return rc
+
+if __name__ == "__main__" :
+    setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
+    dom = query( ItemLookup( "0596002815" ) )
+    print dom.toprettyxml()
+    items = dom.getElementsByTagName('Items').item(0)
+    books = unmarshal(items)
+    print dir( books )
+    print dir( books.Item )
