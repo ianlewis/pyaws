@@ -129,20 +129,24 @@ def buildException( els ):
 # User interfaces
 
 def ItemLookup( ItemId, IdType=None, AWSAccessKeyId=None ): 
+    return createObjects ( XMLItemLookup( ItemId, IdType, AWSAccessKeyId ))
+    
+def ItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
+    return createObjects( XMLItemSearch( Keywords, SearchIndex, AWSAccessKeyId ))
+    
+
+def XMLItemLookup( ItemId, IdType=None, AWSAccessKeyId=None ): 
     Operation = "ItemLookup"
     AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
     argv = inspect.getargvalues( inspect.currentframe() )[-1].items();
-    url = buildRequest( argv );
-    return url;
+    return query( buildRequest(argv) )
 
-
-def ItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
+def XMLItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
     Operation = "ItemSearch"
     AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
     Keywords = urllib.quote(Keywords)
     argv = inspect.getargvalues( inspect.currentframe() )[-1].items();
-    url = buildRequest( argv );
-    return url;
+    return query( buildRequest(argv) )
     
 # core functions
 
@@ -160,7 +164,12 @@ def query( url ):
     return dom
 
 
+def createObjects( dom ):
+    items = dom.getElementsByTagName('Items' ).item(0)
+    return unmarshal(items).Item
+
 def unmarshal(element):
+# this core function is implemented by Mark Pilgrim (f8dy@diveintomark.org)
     rc = Bag()
     childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
 
@@ -172,13 +181,7 @@ def unmarshal(element):
                     setattr(rc, key, [getattr(rc, key)])
                 setattr(rc, key, getattr(rc, key) + [unmarshal(child)])
             elif isinstance(child, minidom.Element) :
-                # make the first Details element a key
                 setattr(rc,key,[unmarshal(child)])
-                #dbg: because otherwise 'hasattr' only tests
-                #dbg: on the second occurence: if there's a
-                #dbg: single return to a query, it's not a
-                #dbg: list. This module should always
-                #dbg: return a list of Details objects.
             else:
                 setattr(rc, key, unmarshal(child))
     else:
@@ -187,9 +190,13 @@ def unmarshal(element):
 
 if __name__ == "__main__" :
     setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-    dom = query( ItemLookup( "0596002815" ) )
-    print dom.toprettyxml()
-    items = dom.getElementsByTagName('Items').item(0)
-    books = unmarshal(items)
-    print dir( books )
-    print dir( books.Item )
+    books = ItemLookup( "0596002815" )
+    
+    for book in books:
+        for att in dir(book):
+            print '%s = %s' %( att, getattr(book, att) )
+        for ia in book.ItemAttributes:
+            for att in dir(ia):
+                print '%s = %s' %( att, getattr(ia, att) )
+            
+        
