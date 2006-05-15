@@ -192,9 +192,14 @@ def unmarshal(element, rc=None):
 
 if __name__ == "__main__" :
     setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-    book = ItemLookup( "0596009259" )
 
+    book = ItemLookup( "0596009259" )
     for att in dir(book):
         print '%s = %s' %( att, getattr(book, att) )
             
+    books = ItemSearch("python", SearchIndex="Books")
+    for book in books:
+        for att in dir(book):
+            print '%s = %s' %( att, getattr(book, att) )
+
         

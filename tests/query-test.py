@@ -24,6 +24,10 @@ class QueryTest( unittest.TestCase ):
         self.assertEqual( book.Author, u'Mark Lutz')
 
 
+    def testItemSearch(self):
+        books = ecs.ItemSearch("python", SearchIndex="Books")
+        self.assert_( len(books) > 9, "We are expect more than 9 books are returned." )
+
 if __name__ == "__main__" :
     unittest.main()
 
