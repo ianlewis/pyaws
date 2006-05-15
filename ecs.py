@@ -20,6 +20,7 @@ TODO:
 
 import os, urllib, string, inspect
 from xml.dom import minidom
+import pdb
 
 __author__ = "Kun Xi < kunxi@kunxi.org >"
 __version__ = "0.0.1"
@@ -165,12 +166,13 @@ def query( url ):
 
 
 def createObjects( dom ):
-    items = dom.getElementsByTagName('Items' ).item(0)
-    return unmarshal(items).Item
+    item = dom.getElementsByTagName('Items' ).item(0)
+    return unmarshal(item ).Item
 
-def unmarshal(element):
+def unmarshal(element, rc=None):
     # this core function is implemented by Mark Pilgrim (f8dy@diveintomark.org)
-    rc = Bag()
+    if(rc == None):
+        rc = Bag()
     childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
 
     if childElements:
@@ -180,8 +182,8 @@ def unmarshal(element):
                 if type(getattr(rc, key)) <> type([]):
                     setattr(rc, key, [getattr(rc, key)])
                 setattr(rc, key, getattr(rc, key) + [unmarshal(child)])
-            elif isinstance(child, minidom.Element) :
-                setattr(rc,key,[unmarshal(child)])
+            elif isinstance(child, minidom.Element) and (child.tagName == 'ItemAttributes') :
+                unmarshal(child, rc)
             else:
                 setattr(rc, key, unmarshal(child))
     else:
@@ -190,13 +192,9 @@ def unmarshal(element):
 
 if __name__ == "__main__" :
     setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-    books = ItemLookup( "0596002815" )
-    
-    for book in books:
-        for att in dir(book):
-            print '%s = %s' %( att, getattr(book, att) )
-        for ia in book.ItemAttributes:
-            for att in dir(ia):
-                print '%s = %s' %( att, getattr(ia, att) )
+    book = ItemLookup( "0596009259" )
+
+    for att in dir(book):
+        print '%s = %s' %( att, getattr(book, att) )
             
         
