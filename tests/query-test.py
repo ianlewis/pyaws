@@ -7,17 +7,9 @@ import ecs
 
 class QueryTest( unittest.TestCase ):
     def testBadLicenseKey(self):
-        ecs.setLicenseKey( "1MGDS69U8JF7QC7JDZG4" )
-        self.assertRaises( ecs.InvalidParameterValue, ecs.query, ecs.ItemLookup( "0596002815" ) )
+        ecs.setLicenseKey( "1MGVS72Y8JF7EC7JDZG0" )
+        self.assertRaises( ecs.InvalidParameterValue, ecs.ItemLookup, "0596002818" )
 
-    def testExceptionMessage(self):
-        ecs.setLicenseKey( "1MGDS69U8JF7QC7JDZG4" )
-        try:
-            ecs.query( ecs.ItemLookup( "0596002815" ) )
-        except ecs.InvalidParameterValue, e:
-            print e.args
-            self.assertNotEqual( e.args, None )
-        
 
 if __name__ == "__main__" :
     unittest.main()

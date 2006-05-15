@@ -169,7 +169,7 @@ def createObjects( dom ):
     return unmarshal(items).Item
 
 def unmarshal(element):
-# this core function is implemented by Mark Pilgrim (f8dy@diveintomark.org)
+    # this core function is implemented by Mark Pilgrim (f8dy@diveintomark.org)
     rc = Bag()
     childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
 
