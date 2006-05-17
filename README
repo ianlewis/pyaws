@@ -26,10 +26,11 @@ The APIs fall into two categories: Python object and raw XML. For example, ItemL
     ItemLookup
     ItemSearch
 
+TODO:
+    Add more options to ItemLookup
 NOTE: we are not going to wrap the ItemLookup in a class, considering the overhead of self object.
 
 3. Usage -- TODO
 Before this section is complete, you could take a look at tests/ for more details about PyAWS in action.
-
 
 
