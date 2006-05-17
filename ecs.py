@@ -129,18 +129,17 @@ def buildException( els ):
     
 # User interfaces
 
-def ItemLookup( ItemId, IdType=None, AWSAccessKeyId=None ): 
-    return createObjects ( XMLItemLookup( ItemId, IdType, AWSAccessKeyId ))
+def ItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None ): 
+    return createObjects ( XMLItemLookup( ItemId, IdType, SearchIndex, MerchantId, Condition, DeliveryMethod, ISPUPostalCode, OfferPage, ReviewPage, VariationPage, ResponseGroup, AWSAccessKeyId ))
     
-def ItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
-    return createObjects( XMLItemSearch( Keywords, SearchIndex, AWSAccessKeyId ))
-    
-
-def XMLItemLookup( ItemId, IdType=None, AWSAccessKeyId=None ): 
+def XMLItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None ): 
     Operation = "ItemLookup"
     AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
     argv = inspect.getargvalues( inspect.currentframe() )[-1].items();
     return query( buildRequest(argv) )
+
+def ItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
+    return createObjects( XMLItemSearch( Keywords, SearchIndex, AWSAccessKeyId ))
 
 def XMLItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
     Operation = "ItemSearch"
