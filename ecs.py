@@ -52,7 +52,35 @@ _licenseKeys = (
 class AWSException( Exception ) : pass
 class NoLicenseKey( AWSException ) : pass
 class BadLocale( AWSException ) : pass
+# Runtime exception
+class ExactParameterRequirement( AWSException ): pass
+class ExceededMaximumParameterValues( AWSException ): pass
+class InsufficientParameterValues( AWSException ): pass
+class InternalError( AWSException ): pass
+class InvalidEnumeratedParameter( AWSException ): pass
+class InvalidISO8601Time( AWSException ): pass
+class InvalidOperationForMarketplace( AWSException ): pass
+class InvalidOperationParameter( AWSException ): pass
+class InvalidParameterCombination( AWSException ): pass
 class InvalidParameterValue( AWSException ): pass
+class InvalidResponseGroup( AWSException ): pass
+class InvalidServiceParameter( AWSException ): pass
+class InvalidSubscriptionId( AWSException ): pass
+class InvalidXSLTAddress( AWSException ): pass
+class MaximumParameterRequirement( AWSException ): pass
+class MinimumParameterRequirement( AWSException ): pass
+class MissingOperationParameter( AWSException ): pass
+class MissingParameterCombination( AWSException ): pass
+class MissingParameters( AWSException ): pass
+class MissingParameterValueCombination( AWSException ): pass
+class MissingServiceParameter( AWSException ): pass
+class ParameterOutOfRange( AWSException ): pass
+class ParameterRepeatedInRequest( AWSException ): pass
+class RestrictedParameterValueCombination( AWSException ): pass
+class XSLTTransformationError( AWSException ): pass
+
+#TODO: ECommerceService.foo 
+
 
 class Bag : pass
 
@@ -109,9 +137,11 @@ def setVersion(version):
 
 def buildRequest( argv ):
     url = "http://" + _supportedLocales[LOCALE][1] + "/onca/xml?Service=AWSECommerceService"
-    for k,v in argv:
+    for k,v in argv.items():
         if v:
             url += '&%s=%s' % (k,v)
+
+    print "url=", url
     return url;
 
 
@@ -125,31 +155,7 @@ def buildException( els ):
     return e
 
 
-
-    
-# User interfaces
-
-def ItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None ): 
-    return createObjects ( XMLItemLookup( ItemId, IdType, SearchIndex, MerchantId, Condition, DeliveryMethod, ISPUPostalCode, OfferPage, ReviewPage, VariationPage, ResponseGroup, AWSAccessKeyId ))
-    
-def XMLItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None ): 
-    Operation = "ItemLookup"
-    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
-    argv = inspect.getargvalues( inspect.currentframe() )[-1].items();
-    return query( buildRequest(argv) )
-
-def ItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
-    return createObjects( XMLItemSearch( Keywords, SearchIndex, AWSAccessKeyId ))
-
-def XMLItemSearch( Keywords, SearchIndex="Blended", AWSAccessKeyId=None ):  
-    Operation = "ItemSearch"
-    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
-    Keywords = urllib.quote(Keywords)
-    argv = inspect.getargvalues( inspect.currentframe() )[-1].items();
-    return query( buildRequest(argv) )
-    
 # core functions
-
 def query( url ):
     u = urllib.FancyURLopener( HTTP_PROXY )
     usock = u.open(url)
@@ -163,10 +169,59 @@ def query( url ):
     
     return dom
 
+class pagedIterator:
+    def __init__(self, XMLSearch, arguments, Keyword):
+        self.search = XMLSearch 
+        self.arguments = arguments 
+        self.keyword = Keyword
+        self.page = arguments[Keyword] or 1
+        self.index = 0
+        dom = self.search( ** self.arguments )
+        ( self.items, self.len ) = createObjects(dom)
+
+    def __len__(self):
+        return self.len
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if self.index < self.len:
+            self.index = self.index + 1
+            return self.__getitem__(self.index-1)
+        else:
+            raise StopIteration
+
+    def __getitem__(self, key):
+        try:
+            num = int(key)
+        except TypeError, e:
+            raise e
+
+        if num >= self.len:
+            raise IndexError
+
+        page = num / 10 + 1
+        index = num % 10
+        if page != self.page:
+            self.arguments[self.keyword] = page
+            ( self.items, unused ) = createObjects( self.search ( **self.arguments ))
+	    self.page = page
+
+        return self.items[index]
+
 
 def createObjects( dom ):
-    item = dom.getElementsByTagName('Items' ).item(0)
-    return unmarshal(item ).Item
+    items = unmarshal( dom.getElementsByTagName('Items' ).item(0)).Item
+    if type(items) <> type([]):
+        items = [items]
+    try:
+    	total = dom.getElementsByTagName("TotalResults").item(0).firstChild.data
+
+    except AttributeError, e:
+        total = len(items)
+	
+    return (items, total)
 
 def unmarshal(element, rc=None):
     # this core function is implemented by Mark Pilgrim (f8dy@diveintomark.org)
@@ -189,16 +244,76 @@ def unmarshal(element, rc=None):
         rc = "".join([e.data for e in element.childNodes if isinstance(e, minidom.Text)])
     return rc
 
+    
+# User interfaces
+
+# ItemOperation
+def ItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None ): 
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return pagedIterator( XMLItemLookup, argv, "OfferPage" )
+    
+def XMLItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None ): 
+    Operation = "ItemLookup"
+    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return query( buildRequest(argv) )
+
+def ItemSearch( Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return pagedIterator( XMLItemSearch, argv, "ItemPage" )
+
+def XMLItemSearch( Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
+    Operation = "ItemSearch"
+    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+    Keywords = urllib.quote(Keywords)
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return query( buildRequest(argv) )
+
+def SimilarityLookup( ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return pagedIterator( XMLSimilarityLookup, argv, "OfferPage" )
+
+def XMLSimilarityLookup( ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
+    Operation = "SimilarityLookup"
+    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return query( buildRequest(argv) )
+
+# ListOperation
+def ListLookup( ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return pagedIterator( XMLListLookup, argv, "OfferPage" )
+
+def XMLListLookup( ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
+    Operation = "ListLookup"
+    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return query( buildRequest(argv) )
+
+def ListSearch( ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None ):
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return pagedIterator( XMLListSearch, argv, "OfferPage" )
+
+def XMLListSearch( ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None ):
+    Operation = "ListSearch"
+    AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+    argv = inspect.getargvalues( inspect.currentframe() )[-1]
+    return query( buildRequest(argv) )
+
+#Remote Shopping Cart Operations
+
+
+
 if __name__ == "__main__" :
     setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
 
-    book = ItemLookup( "0596009259" )
-    for att in dir(book):
-        print '%s = %s' %( att, getattr(book, att) )
-            
-    books = ItemSearch("python", SearchIndex="Books")
+#    books = ItemSearch("python", SearchIndex="Books")
+#    for book in books:
+#    	print book.Title
+
+    books = ItemLookup( "0596009259" )
     for book in books:
         for att in dir(book):
             print '%s = %s' %( att, getattr(book, att) )
-
+            
         
