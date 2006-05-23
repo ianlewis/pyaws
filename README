@@ -27,7 +27,11 @@ The APIs fall into two categories: Python object and raw XML. For example, ItemL
     ItemSearch
 
 TODO:
-    Add more options to ItemLookup
+    Add more options to ItemLookup -- done
+    Add pagedIterator support -- done
+    Check the correctQuery response.
+    More test cases for exceptions
+    Ecommerce.foo exception handling.
 NOTE: we are not going to wrap the ItemLookup in a class, considering the overhead of self object.
 
 3. Usage -- TODO
