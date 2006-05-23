@@ -172,6 +172,13 @@ def query( url ):
     
     return dom
 
+
+def rawIterator( XMLSearch, arguments ):
+    dom = XMLSearch( ** arguments )
+    (items, len ) = createObjects(dom)
+    return items
+    
+
 class pagedIterator:
     def __init__(self, XMLSearch, arguments, Keyword):
         self.search = XMLSearch 
@@ -273,7 +280,7 @@ def XMLItemSearch( Keywords, SearchIndex="Blended", Availability=None, Title=Non
 
 def SimilarityLookup( ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
     argv = inspect.getargvalues( inspect.currentframe() )[-1]
-    return pagedIterator( XMLSimilarityLookup, argv, "OfferPage" )
+    return rawIterator( XMLSimilarityLookup, argv )
 
 def XMLSimilarityLookup( ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
     Operation = "SimilarityLookup"
@@ -309,11 +316,7 @@ def XMLListSearch( ListType, Name=None, FirstName=None, LastName=None, Email=Non
 if __name__ == "__main__" :
     setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
 
-#    books = ItemSearch("python", SearchIndex="Books")
-#    for book in books:
-#    	print book.Title
-
-    books = ItemLookup( "0596009259" )
+    books = SimilarityLookup("0596009259")
     for book in books:
         for att in dir(book):
             print '%s = %s' %( att, getattr(book, att) )

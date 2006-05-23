@@ -25,12 +25,12 @@ class QueryTest( unittest.TestCase ):
 
     def testItemSearch(self):
         books = ecs.ItemSearch("python", SearchIndex="Books")
-        self.assert_( len(books) > 200, "We are expect more than 9 books are returned." )
+        self.assert_( len(books) > 200, "We are expect more than 200 books are returned." )
+        self.assertNotEqual( books[100], None )
     
     def testSimilarityLookup(self):
-        pass
-        #books = ecs.SimilarityLookup("0596009259")
-        #self.assert_( len(books) > 9, "We are expect more than 9 books are returned." )
+        books = ecs.SimilarityLookup("0596009259")
+        self.assert_( len(books) > 9, "We are expect more than 9 books are returned." )
 
 if __name__ == "__main__" :
     unittest.main()
