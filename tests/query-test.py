@@ -9,9 +9,6 @@ class QueryTest( unittest.TestCase ):
     def setUp(self):
         ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
-    def testBadLicenseKey(self):
-        ecs.setLicenseKey( "1MGVS72Y8JF7EC7JDZG0" )
-        self.assertRaises( ecs.InvalidParameterValue, ecs.ItemLookup, "0596002818" )
 
     def testItemLookup(self):
         book = ecs.ItemLookup("0596009259")

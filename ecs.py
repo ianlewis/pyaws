@@ -120,8 +120,11 @@ def setLicenseKey(license_key=None):
     raise NoLicenseKey, ("Please get the license key from  http://www.amazon.com/webservices" )
 
 
-def getLicenseKey(license_key = None):
+def getLicenseKey():
     """get license key"""
+    if not LICENSE_KEY:
+        raise NoLicenseKey, ("Please get the license key from  http://www.amazon.com/webservices" )
+        
     return LICENSE_KEY
     
 
