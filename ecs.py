@@ -219,8 +219,7 @@ def createObjects( dom ):
     if type(items) <> type([]):
         items = [items]
     try:
-    	total = dom.getElementsByTagName("TotalResults").item(0).firstChild.data
-
+    	total = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
     except AttributeError, e:
         total = len(items)
 	
