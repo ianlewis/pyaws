@@ -18,7 +18,7 @@ class QueryTest( unittest.TestCase ):
 
         self.assertEqual( book.ASIN, u'0596009259' )
         self.assertEqual( book.Title, u'Programming Python' )
-        self.assertEqual( book.Manufacturer, u"O'Reilly Media, Inc." )
+        self.assertEqual( book.Manufacturer, u"O'Reilly Media" )
         self.assertEqual( book.ProductGroup, u'Book' )
         self.assertEqual( book.Author, u'Mark Lutz')
 
