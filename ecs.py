@@ -173,21 +173,21 @@ def query( url ):
     return dom
 
 
-def rawIterator( XMLSearch, arguments ):
+def rawIterator( XMLSearch, arguments, kwItems, kwItem ):
     dom = XMLSearch( ** arguments )
-    (items, len ) = createObjects(dom)
+    (items, len ) = createObjects( dom, kwItems, kwItem )
     return items
     
 
 class pagedIterator:
-    def __init__(self, XMLSearch, arguments, Keyword):
+    def __init__(self, XMLSearch, arguments, kwPage, kwItems, kwItem ):
         self.search = XMLSearch 
         self.arguments = arguments 
-        self.keyword = Keyword
-        self.page = arguments[Keyword] or 1
+        self.keywords ={ 'Page':kwPage, 'Items':kwItems, 'Item':kwItem } 
+        self.page = arguments[kwPage] or 1
         self.index = 0
         dom = self.search( ** self.arguments )
-        ( self.items, self.len ) = createObjects(dom)
+        ( self.items, self.len ) = createObjects( dom, kwItems, kwItem )
 
     def __len__(self):
         return self.len
@@ -214,15 +214,15 @@ class pagedIterator:
         page = num / 10 + 1
         index = num % 10
         if page != self.page:
-            self.arguments[self.keyword] = page
-            ( self.items, unused ) = createObjects( self.search ( **self.arguments ))
+            self.arguments[self.keywords['Page']] = page
+            ( self.items, unused ) = createObjects( self.search ( **self.arguments ), self.keywords['Items'], self.keywords['Item'] )
 	    self.page = page
 
         return self.items[index]
 
 
-def createObjects( dom ):
-    items = unmarshal( dom.getElementsByTagName('Items' ).item(0)).Item
+def createObjects( dom, kwItems, kwItem ):
+    items = getattr( unmarshal( dom.getElementsByTagName(kwItems).item(0)), kwItem )
     if type(items) <> type([]):
         items = [items]
     try:
@@ -259,7 +259,7 @@ def unmarshal(element, rc=None):
 # ItemOperation
 def ItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None ): 
     argv = inspect.getargvalues( inspect.currentframe() )[-1]
-    return pagedIterator( XMLItemLookup, argv, "OfferPage" )
+    return pagedIterator( XMLItemLookup, argv, 'OfferPage', 'Items', 'Item' )
     
 def XMLItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None ): 
     Operation = "ItemLookup"
@@ -269,7 +269,7 @@ def XMLItemLookup( ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condi
 
 def ItemSearch( Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
     argv = inspect.getargvalues( inspect.currentframe() )[-1]
-    return pagedIterator( XMLItemSearch, argv, "ItemPage" )
+    return pagedIterator( XMLItemSearch, argv, "ItemPage", 'Items', 'Item' )
 
 def XMLItemSearch( Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
     Operation = "ItemSearch"
@@ -280,7 +280,7 @@ def XMLItemSearch( Keywords, SearchIndex="Blended", Availability=None, Title=Non
 
 def SimilarityLookup( ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
     argv = inspect.getargvalues( inspect.currentframe() )[-1]
-    return rawIterator( XMLSimilarityLookup, argv )
+    return rawIterator( XMLSimilarityLookup, argv, 'Items' , 'Item' )
 
 def XMLSimilarityLookup( ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
     Operation = "SimilarityLookup"
@@ -291,7 +291,7 @@ def XMLSimilarityLookup( ItemId, SimilarityType=None, MerchantId=None, Condition
 # ListOperation
 def ListLookup( ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
     argv = inspect.getargvalues( inspect.currentframe() )[-1]
-    return pagedIterator( XMLListLookup, argv, "OfferPage" )
+    return pagedIterator( XMLListLookup, argv, 'OfferPage', 'Items' , 'Item' )
 
 def XMLListLookup( ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None ):  
     Operation = "ListLookup"
@@ -301,7 +301,7 @@ def XMLListLookup( ListType, ListId, ProductPage=None, ProductGroup=None, Sort=N
 
 def ListSearch( ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None ):
     argv = inspect.getargvalues( inspect.currentframe() )[-1]
-    return pagedIterator( XMLListSearch, argv, "OfferPage" )
+    return pagedIterator( XMLListSearch, argv, 'ListPage', 'Lists', 'List' )
 
 def XMLListSearch( ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None ):
     Operation = "ListSearch"
@@ -315,10 +315,13 @@ def XMLListSearch( ListType, Name=None, FirstName=None, LastName=None, Email=Non
 
 if __name__ == "__main__" :
     setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
+    dom = XMLListSearch( ListType="WishList", City="Chicago", FirstName="Sam" );
+    print dom.toprettyxml()
+    
 
-    books = SimilarityLookup("0596009259")
-    for book in books:
-        for att in dir(book):
-            print '%s = %s' %( att, getattr(book, att) )
+    items = ListSearch( ListType="WishList", City="Chicago", FirstName="Sam" );
+    for item in items:
+        for att in dir(item):
+            print '%s = %s' %( att, getattr(item, att) )
             
         
