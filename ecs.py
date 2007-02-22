@@ -12,6 +12,7 @@ several places (in this order) for the license key:
 - the "license_key" argument of each function
 - the module-level LICENSE_KEY variable (call setLicense once to set it)
 - an environment variable called AMAZON_LICENSE_KEY
+- foo would return the python object, XMLfoo returns the DOM object
 
 
 TODO: 
@@ -138,6 +139,7 @@ def setVersion(version):
 	
 
 def buildRequest(argv):
+	"""Build the REST Url from argv"""
 	url = "http://" + _supportedLocales[LOCALE][1] + "/onca/xml?Service=AWSECommerceService"
 	for k,v in argv.items():
 		if v:
@@ -148,7 +150,9 @@ def buildRequest(argv):
 
 
 def buildException(els):
-	# We just care the first error.
+	"""Build the exception according to the returned error
+	Notice: We just return the first error"""
+
 	error = els[0]
 	class_name = error.childNodes[0].firstChild.data[4:]
 	msg = error.childNodes[1].firstChild.data 
@@ -157,8 +161,8 @@ def buildException(els):
 	return e
 
 
-# core functions
 def query(url):
+	"""Send the query url and return the DOM"""
 	u = urllib.FancyURLopener(HTTP_PROXY)
 	usock = u.open(url)
 	dom = minidom.parse(usock)
@@ -179,13 +183,13 @@ def rawIterator(XMLSearch, arguments, kwItems, kwItem):
 	
 
 class pagedIterator:
-	'''Return a page-based iterator 
-	XMLSearch: return the dom
-	arguments: the arguments of XMLSearch
-	kwPage:	page keyword
-	'''
+	'''Return a page-based iterator'''
 
 	def __init__(self, XMLSearch, arguments, kwPage, kwItems, kwItem):
+		"""XMLSearch: the callback function that returns the DOM
+		arguments: the arguments for XMLSearch
+		kwPage, kwItems, kwItem: page, items, item keyword to organize the object
+		"""
 		self.search = XMLSearch 
 		self.arguments = arguments 
 		self.keywords ={ 'Page':kwPage, 'Items':kwItems, 'Item':kwItem } 
@@ -234,11 +238,12 @@ def createObjects(dom, kwItems, kwItem):
 		total = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
 	except AttributeError, e:
 		total = len(items)
-	
 	return (items, total)
 
 def unmarshal(element, rc=None):
-	# this core function is implemented by Mark Pilgrim (f8dy@diveintomark.org)
+	"""this core function populate the object using the DOM, 
+	which is inspired by Mark Pilgrim (f8dy@diveintomark.org)"""
+
 	if(rc == None):
 		rc = Bag()
 	childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
@@ -259,7 +264,6 @@ def unmarshal(element, rc=None):
 	
 # User interfaces
 
-# ItemOperation
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', 'Item')
@@ -314,20 +318,31 @@ def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None
 
 #Remote Shopping Cart Operations
 
+def XMLCartCreate(Items, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "CartCreate"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	del argv["Items"]
+
+	i = 1
+	for item in Items:
+		argv["Item.%d.ASIN" % (i)] = item.ASIN;
+		argv["Item.%d.Quantity" % (i)] = item.Quantity;
+		i += 1
+		
+	return query(buildRequest(argv))
+
 
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
+	books = ItemSearch("python", SearchIndex="Books")
+	items = (books[0], books[1], books[2])
 
-	items = ListSearch(ListType="WishList", City="Chicago", FirstName="Sam")
-	item = items[0]
+	for i in range(3):
+		setattr(items[i], "Quantity", i+1)
 
-	dom = XMLListLookup(ListType="WishList", ListId=item.ListId, ResponseGroup="ListItems")
+	dom = XMLCartCreate(items);
 	print dom.toprettyxml()
-
-	items = ListLookup(ListType="WishList", ListId=item.ListId, ResponseGroup="ListItems")
-	for item in items:
-		for att in dir(item):
-			print '%s = %s' %(att, getattr(item, att))
 			
 		
