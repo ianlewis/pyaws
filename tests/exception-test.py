@@ -10,6 +10,14 @@ class ExceptionsTest( unittest.TestCase ):
     def testBadLicenseKey(self):
         ecs.setLicenseKey( "1MGVS72Y8JF7EC7JDZG0" )
         self.assertRaises( ecs.InvalidParameterValue, ecs.ItemLookup, "0596002818" )
+
+    def testDefaultLocale(self):
+        self.assertEqual( ecs.getLocale(), "us" )
+
+    def testSetLocale(self):
+        ecs.setLocale( "fr" )
+        self.assertEqual( ecs.getLocale(), "fr" )
+
     def testBadLocale(self):
         self.assertRaises( ecs.BadLocale, ecs.setLocale, "zh" )
 
