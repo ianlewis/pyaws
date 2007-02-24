@@ -32,6 +32,9 @@ LICENSE_KEY = None;
 HTTP_PROXY = None
 LOCALE = "us"
 VERSION = "2005-10-05"
+_privots = ['ItemAttributes']
+_bypass = ['CartItems']
+
 
 _supportedLocales = {
 		"us" : (None, "webservices.amazon.com"),   
@@ -79,11 +82,8 @@ class ParameterRepeatedInRequest(AWSException): pass
 class RestrictedParameterValueCombination(AWSException): pass
 class XSLTTransformationError(AWSException): pass
 
-#TODO: ECommerceService.foo 
-
 
 class Bag : pass
-
 
 # Utilities functions
 
@@ -180,6 +180,10 @@ def rawIterator(XMLSearch, arguments, kwItems, kwItem):
 	dom = XMLSearch(** arguments)
 	(items, len) = createObjects(dom, kwItems, kwItem)
 	return items
+
+class wrappedIterator(list):
+	'''A built-in list wrapper, we can add attributes later'''
+	pass
 	
 
 class pagedIterator:
@@ -193,7 +197,10 @@ class pagedIterator:
 		self.search = XMLSearch 
 		self.arguments = arguments 
 		self.keywords ={ 'Page':kwPage, 'Items':kwItems, 'Item':kwItem } 
-		self.page = arguments[kwPage] or 1
+		try:
+			self.page = arguments[kwPage] 
+		except KeyError:
+			self.page = 1
 		self.index = 0
 		dom = self.search(** self.arguments)
 		(self.items, self.len) = createObjects(dom, kwItems, kwItem)
@@ -255,17 +262,28 @@ def unmarshal(element, rc=None):
 				if type(getattr(rc, key)) <> type([]):
 					setattr(rc, key, [getattr(rc, key)])
 				setattr(rc, key, getattr(rc, key) + [unmarshal(child)])
-			else:
+			elif isinstance(child, minidom.Element):
+				try:
+					if unmarshal.isPrivoted(child.tagName):
+						unmarshal(child, rc)
+					elif unmarshal.isBypassed(child.tagName):
+						continue
+				except:
+					pass
+
 				setattr(rc, key, unmarshal(child))
 	else:
 		rc = "".join([e.data for e in element.childNodes if isinstance(e, minidom.Text)])
 	return rc
+
 
 	
 # User interfaces
 
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
+	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', 'Item')
 	
 def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
@@ -276,6 +294,8 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 
 def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
+	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return pagedIterator(XMLItemSearch, argv, "ItemPage", 'Items', 'Item')
 
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -287,6 +307,8 @@ def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None
 
 def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
+	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return rawIterator(XMLSimilarityLookup, argv, 'Items' , 'Item')
 
 def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -298,6 +320,8 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 # ListOperation
 def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
+	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return pagedIterator(XMLListLookup, argv, 'ProductPage', 'Lists' , 'List')
 
 def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -308,6 +332,8 @@ def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=No
 
 def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
+	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return pagedIterator(XMLListSearch, argv, 'ListPage', 'Lists', 'List')
 
 def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
@@ -317,6 +343,18 @@ def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None
 	return query(buildRequest(argv))
 
 #Remote Shopping Cart Operations
+def CartCreate(Items, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	dom =  XMLCartCreate(** argv)
+
+	setattr(unmarshal, 'isPrivoted', lambda x: False)
+	setattr(unmarshal, 'isBypassed', lambda x: False)
+	(items, len) = createObjects(dom, 'CartItems', 'CartItem')
+	it = wrappedIterator(items)
+
+	setattr(unmarshal, 'isBypassed', lambda x: x in ['CartItems', 'Request'])
+	unmarshal(dom.getElementsByTagName('Cart').item(0), it)
+	return it 
 
 def XMLCartCreate(Items, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartCreate"
@@ -342,7 +380,9 @@ if __name__ == "__main__" :
 	for i in range(3):
 		setattr(items[i], "Quantity", i+1)
 
-	dom = XMLCartCreate(items);
-	print dom.toprettyxml()
+	cart = CartCreate(items);
+	for item in cart:
+		print item.ASIN
+
 			
 		

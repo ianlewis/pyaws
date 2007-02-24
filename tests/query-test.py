@@ -40,7 +40,7 @@ class QueryTest(unittest.TestCase):
 	def testSimilarityLookup(self):
 		books = ecs.SimilarityLookup("0596009259")
 		for book in books:
-			dump(book)
+			print dir(book)
 		self.assert_(len(books) > 9, "We are expect more than 9 books are returned.")
 
 if __name__ == "__main__" :
