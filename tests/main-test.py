@@ -65,6 +65,25 @@ class QueryTest(unittest.TestCase):
 			self.dump(book)
 		self.assert_(len(books) > 9, "We are expect more than 9 books are returned.")
 
+class CarteTest( unittest.TestCase ):
+	def setUp(self):
+		# prepare the python books to add 
+		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+		self.books = ecs.ItemSearch("python", SearchIndex="Books")
+		self.carte = None
+
+	def testCarteCreate(self):
+		items = (self.books[0], self.books[1], self.books[2])
+		for i in range(3):
+			setattr(items[i], "Quantity", i+1)
+
+		self.cart = ecs.CartCreate(items)
+		for i in range(3):
+			self.assertEqual(self.books[i].ASIN, self.cart[i].ASIN)
+			self.assertEqual(self.books[i].Quantity, int(self.cart[i].Quantity))
+		
+
+
 if __name__ == "__main__" :
 	unittest.main()
 
