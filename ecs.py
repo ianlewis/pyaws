@@ -346,22 +346,14 @@ def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None
 def CartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	dom =  XMLCartCreate(** argv)
-
-	setattr(unmarshal, 'isPrivoted', lambda x: False)
-	setattr(unmarshal, 'isBypassed', lambda x: False)
-	(items, len) = createObjects(dom, 'CartItems', 'CartItem')
-	it = wrappedIterator(items)
-
-	setattr(unmarshal, 'isBypassed', lambda x: x in ['CartItems', 'Request'])
-	unmarshal(dom.getElementsByTagName('Cart').item(0), it)
-	return it 
+	return _cartOperation(dom)
 
 def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartCreate"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	del argv["Items"]
-	del argv["Quantities"]
+	for x in ('Items', 'Quantities'):
+		del argv[x]
 
 	_fromListToItems(Items, Quantities, argv)
 	return query(buildRequest(argv))
@@ -369,15 +361,8 @@ def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 def CartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	dom =  XMLCartAdd(** argv)
+	return _cartOperation(dom)
 
-	setattr(unmarshal, 'isPrivoted', lambda x: False)
-	setattr(unmarshal, 'isBypassed', lambda x: False)
-	(items, len) = createObjects(dom, 'CartItems', 'CartItem')
-	it = wrappedIterator(items)
-
-	setattr(unmarshal, 'isBypassed', lambda x: x in ['CartItems', 'Request'])
-	unmarshal(dom.getElementsByTagName('Cart').item(0), it)
-	return it 
 
 def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartAdd"
@@ -397,6 +382,16 @@ def _fromListToItems(items, quantities, argv):
 	for i in range(len(items)):
 		argv["Item.%d.ASIN" % (i+1)] = items[i].ASIN;
 		argv["Item.%d.Quantity" % (i+1)] = quantities[i]
+
+def _cartOperation(dom):
+	setattr(unmarshal, 'isPrivoted', lambda x: False)
+	setattr(unmarshal, 'isBypassed', lambda x: False)
+	(items, len) = createObjects(dom, 'CartItems', 'CartItem')
+	it = wrappedIterator(items)
+
+	setattr(unmarshal, 'isBypassed', lambda x: x in ['CartItems', 'Request'])
+	unmarshal(dom.getElementsByTagName('Cart').item(0), it)
+	return it
 		
 
 if __name__ == "__main__" :
