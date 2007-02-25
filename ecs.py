@@ -343,7 +343,7 @@ def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None
 	return query(buildRequest(argv))
 
 #Remote Shopping Cart Operations
-def CartCreate(Items, ResponseGroup=None, AWSAccessKeyId=None):
+def CartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	dom =  XMLCartCreate(** argv)
 
@@ -356,33 +356,56 @@ def CartCreate(Items, ResponseGroup=None, AWSAccessKeyId=None):
 	unmarshal(dom.getElementsByTagName('Cart').item(0), it)
 	return it 
 
-def XMLCartCreate(Items, ResponseGroup=None, AWSAccessKeyId=None):
+def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartCreate"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	del argv["Items"]
+	del argv["Quantities"]
 
-	i = 1
-	for item in Items:
-		argv["Item.%d.ASIN" % (i)] = item.ASIN;
-		argv["Item.%d.Quantity" % (i)] = item.Quantity;
-		i += 1
-		
+	_fromListToItems(Items, Quantities, argv)
+	return query(buildRequest(argv))
+
+def CartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	dom =  XMLCartAdd(** argv)
+
+	setattr(unmarshal, 'isPrivoted', lambda x: False)
+	setattr(unmarshal, 'isBypassed', lambda x: False)
+	(items, len) = createObjects(dom, 'CartItems', 'CartItem')
+	it = wrappedIterator(items)
+
+	setattr(unmarshal, 'isBypassed', lambda x: x in ['CartItems', 'Request'])
+	unmarshal(dom.getElementsByTagName('Cart').item(0), it)
+	return it 
+
+def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "CartAdd"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	CartId = Cart.CartId
+	HMAC = urllib.quote(Cart.HMAC)
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	for x in ('Items', 'Cart', 'Quantities'):
+		del argv[x]
+
+	_fromListToItems(Items, Quantities, argv)
 	return query(buildRequest(argv))
 
 
+
+def _fromListToItems(items, quantities, argv):
+	for i in range(len(items)):
+		argv["Item.%d.ASIN" % (i+1)] = items[i].ASIN;
+		argv["Item.%d.Quantity" % (i+1)] = quantities[i]
+		
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
 	books = ItemSearch("python", SearchIndex="Books")
 	items = (books[0], books[1], books[2])
+	qs = (1, 3, 5)
 
-	for i in range(3):
-		setattr(items[i], "Quantity", i+1)
-
-	cart = CartCreate(items);
-	for item in cart:
-		print item.ASIN
-
-			
-		
+	cart = CartCreate(items, qs);
+	dom = XMLCartAdd(cart, [books[3]], [8])
+	print dom.toprettyxml()
+	

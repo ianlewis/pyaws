@@ -19,7 +19,7 @@ class ListTest(unittest.TestCase):
 		self.assert_(len(lists) > 3)
 		list = lists[0]
 		self.assertNotEqual(list, None)
-		self.dump(list)
+		# self.dump(list)
 		self.assert_(list.CustomerName.find("Sam") > -1)
 
 	def testListLookup(self):
@@ -61,28 +61,49 @@ class QueryTest(unittest.TestCase):
 	
 	def testSimilarityLookup(self):
 		books = ecs.SimilarityLookup("0596009259")
-		for book in books:
-			self.dump(book)
+		#for book in books:
+		#	self.dump(book)
 		self.assert_(len(books) > 9, "We are expect more than 9 books are returned.")
 
-class CarteTest( unittest.TestCase ):
+class CartTest( unittest.TestCase ):
 	def setUp(self):
 		# prepare the python books to add 
 		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 		self.books = ecs.ItemSearch("python", SearchIndex="Books")
-		self.carte = None
+		self.cart = None
 
-	def testCarteCreate(self):
+	def testCartCreate(self):
 		items = (self.books[0], self.books[1], self.books[2])
-		for i in range(3):
-			setattr(items[i], "Quantity", i+1)
+		qs = (1, 3, 5)
 
-		self.cart = ecs.CartCreate(items)
+		self.cart = ecs.CartCreate(items, qs)
 		for i in range(3):
 			self.assertEqual(self.books[i].ASIN, self.cart[i].ASIN)
-			self.assertEqual(self.books[i].Quantity, int(self.cart[i].Quantity))
-		
+			self.assertEqual(qs[i], int(self.cart[i].Quantity))
 
+	def testCartAdd(self):
+		if self.cart == None:
+			self.testCartCreate() 
+
+		print self.cart
+
+		l = []
+		for x in self.cart:
+			z = (int(x.ASIN), int(x.Quantity))
+			l.append(z)
+			
+		items = (self.books[5], self.books[8])
+		qs = (5, 8)
+		z = (int(self.books[5].ASIN), 5)
+		l.append(z)
+		z = (int(self.books[8].ASIN), 8)
+		l.append(z)
+
+		self.cart = ecs.CartAdd(self.cart, items, qs)
+
+		# check the item
+		for item in self.cart:
+			self.assert_( (int(item.ASIN), int(item.Quantity)) in l)
 
 if __name__ == "__main__" :
 	unittest.main()
