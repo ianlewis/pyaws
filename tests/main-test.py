@@ -105,6 +105,16 @@ class CartTest( unittest.TestCase ):
 		for item in self.cart:
 			self.assert_( (int(item.ASIN), int(item.Quantity)) in l)
 
+	def testCartGet(self):
+		if self.cart == None:
+			self.testCartCreate() 
+
+		cart = ecs.CartGet(self.cart)
+		for i in range(len(cart)):
+			self.assertEqual(self.cart[i].ASIN, cart[i].ASIN)
+			self.assertEqual(self.cart[i].Quantity, cart[i].Quantity)
+
+
 if __name__ == "__main__" :
 	unittest.main()
 

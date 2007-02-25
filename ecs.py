@@ -363,7 +363,6 @@ def CartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	dom =  XMLCartAdd(** argv)
 	return _cartOperation(dom)
 
-
 def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartAdd"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
@@ -374,6 +373,22 @@ def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None)
 		del argv[x]
 
 	_fromListToItems(Items, Quantities, argv)
+	return query(buildRequest(argv))
+
+def CartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	dom =  XMLCartGet(** argv)
+	print dom.toprettyxml()
+	return _cartOperation(dom)
+
+def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "CartGet"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	CartId = Cart.CartId
+	HMAC = urllib.quote(Cart.HMAC)
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	del argv['Cart']
+
 	return query(buildRequest(argv))
 
 
@@ -401,6 +416,9 @@ if __name__ == "__main__" :
 	qs = (1, 3, 5)
 
 	cart = CartCreate(items, qs);
-	dom = XMLCartAdd(cart, [books[3]], [8])
-	print dom.toprettyxml()
+	newcart = CartGet(cart)
+
+	for i in range(len(cart)):
+		print cart[i].ASIN, newcart[i].ASIN
+
 	
