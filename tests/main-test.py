@@ -48,10 +48,10 @@ class QueryTest(unittest.TestCase):
 		self.assertNotEqual(book, None)
 
 		self.assertEqual(book.ASIN, u'0596009259')
-		self.assertEqual(book.ItemAttributes.Title, u'Programming Python')
-		self.assertEqual(book.ItemAttributes.Manufacturer, u"O'Reilly Media")
-		self.assertEqual(book.ItemAttributes.ProductGroup, u'Book')
-		self.assertEqual(book.ItemAttributes.Author, u'Mark Lutz')
+		self.assertEqual(book.Title, u'Programming Python')
+		self.assertEqual(book.Manufacturer, u"O'Reilly Media")
+		self.assertEqual(book.ProductGroup, u'Book')
+		self.assertEqual(book.Author, u'Mark Lutz')
 
 
 	def testItemSearch(self):
@@ -78,17 +78,15 @@ class CartTest( unittest.TestCase ):
 
 		self.cart = ecs.CartCreate(items, qs)
 		for i in range(3):
-			self.assertEqual(self.books[i].ASIN, self.cart[i].ASIN)
-			self.assertEqual(qs[i], int(self.cart[i].Quantity))
+			self.assertEqual(self.books[i].ASIN, self.cart.CartItems[i].ASIN)
+			self.assertEqual(qs[i], int(self.cart.CartItems[i].Quantity))
 
 	def testCartAdd(self):
 		if self.cart == None:
 			self.testCartCreate() 
 
-		print self.cart
-
 		l = []
-		for x in self.cart:
+		for x in self.cart.CartItems:
 			z = (int(x.ASIN), int(x.Quantity))
 			l.append(z)
 			
@@ -102,7 +100,7 @@ class CartTest( unittest.TestCase ):
 		self.cart = ecs.CartAdd(self.cart, items, qs)
 
 		# check the item
-		for item in self.cart:
+		for item in self.cart.CartItems:
 			self.assert_( (int(item.ASIN), int(item.Quantity)) in l)
 
 	def testCartGet(self):
@@ -110,9 +108,9 @@ class CartTest( unittest.TestCase ):
 			self.testCartCreate() 
 
 		cart = ecs.CartGet(self.cart)
-		for i in range(len(cart)):
-			self.assertEqual(self.cart[i].ASIN, cart[i].ASIN)
-			self.assertEqual(self.cart[i].Quantity, cart[i].Quantity)
+		for i in range(len(cart.CartItems)):
+			self.assertEqual(self.cart.CartItems[i].ASIN, cart.CartItems[i].ASIN)
+			self.assertEqual(self.cart.CartItems[i].Quantity, cart.CartItems[i].Quantity)
 
 
 if __name__ == "__main__" :

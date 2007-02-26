@@ -261,15 +261,16 @@ def unmarshal(element, rc=None):
 					setattr(rc, key, [getattr(rc, key)])
 				setattr(rc, key, getattr(rc, key) + [unmarshal(child)])
 			elif isinstance(child, minidom.Element):
-				try:
-					if unmarshal.isPrivoted(child.tagName):
-						unmarshal(child, rc)
-					elif unmarshal.isBypassed(child.tagName):
-						continue
-				except:
-					pass
-
-				setattr(rc, key, unmarshal(child))
+				if hasattr(unmarshal, 'isPrivoted') and unmarshal.isPrivoted(child.tagName):
+					unmarshal(child, rc)
+				elif hasattr(unmarshal, 'isBypassed') and unmarshal.isBypassed(child.tagName):
+					continue
+				elif hasattr(unmarshal, 'isCollective') and unmarshal.isCollective(child.tagName):
+					setattr(rc, key, unmarshal(child, wrappedIterator([])))
+				elif hasattr(unmarshal, 'isCollected') and unmarshal.isCollected(child.tagName):
+					rc.append(unmarshal(child))
+				else:
+					setattr(rc, key, unmarshal(child))
 	else:
 		rc = "".join([e.data for e in element.childNodes if isinstance(e, minidom.Text)])
 	return rc
@@ -418,15 +419,10 @@ def _fromListToItems(argv, items, id, actions):
 
 def _cartOperation(dom):
 	setattr(unmarshal, 'isPrivoted', lambda x: False)
-	setattr(unmarshal, 'isBypassed', lambda x: False)
-
-	# Get all cart items
-	(items, len) = createObjects(dom, 'CartItems', 'CartItem')
-	it = wrappedIterator(items)
-
-	setattr(unmarshal, 'isBypassed', lambda x: x in ['CartItem', 'Request', 'SavedForLaterItems'])
-	unmarshal(dom.getElementsByTagName('Cart').item(0), it)
-	return it
+	setattr(unmarshal, 'isBypassed', lambda x: x == 'Request')
+	setattr(unmarshal, 'isCollective', lambda x: x in ('CartItems', 'SavedForLaterItems'))
+	setattr(unmarshal, 'isCollected', lambda x: x in ('CartItem', 'SavedForLaterItem'))
+	return unmarshal(dom.getElementsByTagName('Cart').item(0))
 		
 
 if __name__ == "__main__" :
@@ -436,7 +432,6 @@ if __name__ == "__main__" :
 	qs = (5, 3, 5)
 
 	cart = CartCreate(items, qs);
-	newcart = CartModify(cart, [cart[0], cart[1]], [2, 'SaveForLater']) 
 	import pdb
 	pdb.set_trace()
 
