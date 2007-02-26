@@ -110,6 +110,22 @@ class CartTest( unittest.TestCase ):
 			self.assertEqual(self.cart.CartItems[i].ASIN, cart.CartItems[i].ASIN)
 			self.assertEqual(self.cart.CartItems[i].Quantity, cart.CartItems[i].Quantity)
 
+	def testCartModify(self):
+		self.testCartCreate()
+
+		cart = ecs.CartModify(self.cart, (self.cart.CartItems[1], self.cart.CartItems[2]), (10, 'SaveForLater'))
+		# Item 0 is the same
+		self.assertEqual(self.cart.CartItems[0].Title, cart.CartItems[0].Title)
+		self.assertEqual(self.cart.CartItems[0].Quantity, cart.CartItems[0].Quantity)
+		# Item 1: Quantity is different
+		self.assertEqual(self.cart.CartItems[1].Title, cart.CartItems[1].Title)
+		self.assertEqual(10, int(cart.CartItems[1].Quantity))
+		
+		# Item 2: saved for later
+		self.assertEqual(2, len(cart.CartItems))
+		self.assertEqual(cart.SavedForLaterItems[0].Title, self.cart.CartItems[2].Title)
+		self.assertEqual(cart.SavedForLaterItems[0].Quantity, self.cart.CartItems[2].Quantity)
+
 
 if __name__ == "__main__" :
 	unittest.main()

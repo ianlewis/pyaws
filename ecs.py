@@ -418,12 +418,22 @@ def _fromListToItems(argv, items, id, actions):
 
 
 def _cartOperation(dom):
-	setattr(unmarshal, 'isPrivoted', lambda x: False)
+	unmarshal.reset()
 	setattr(unmarshal, 'isBypassed', lambda x: x == 'Request')
 	setattr(unmarshal, 'isCollective', lambda x: x in ('CartItems', 'SavedForLaterItems'))
 	setattr(unmarshal, 'isCollected', lambda x: x in ('CartItem', 'SavedForLaterItem'))
 	return unmarshal(dom.getElementsByTagName('Cart').item(0))
-		
+
+
+def _resetUnmarshal():
+	for x in ('isPrivoted', 'isByPassed', 'isCollective', 'isCollected'):
+		try:
+			delattr(unmarshal, x)
+		except AttributeError:
+			pass
+
+setattr(unmarshal, 'reset', _resetUnmarshal)
+del _resetUnmarshal
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
