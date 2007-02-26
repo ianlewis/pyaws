@@ -281,6 +281,7 @@ def unmarshal(element, rc=None):
 
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	unmarshal.reset()
 	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
 	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', 'Item')
@@ -293,8 +294,8 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 
 def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	unmarshal.reset()
 	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return pagedIterator(XMLItemSearch, argv, "ItemPage", 'Items', 'Item')
 
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -306,8 +307,8 @@ def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None
 
 def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	unmarshal.reset()
 	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return rawIterator(XMLSimilarityLookup, argv, 'Items' , 'Item')
 
 def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -319,8 +320,8 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 # ListOperation
 def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	unmarshal.reset()
 	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return pagedIterator(XMLListLookup, argv, 'ProductPage', 'Lists' , 'List')
 
 def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -331,8 +332,8 @@ def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=No
 
 def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	unmarshal.reset()
 	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	setattr(unmarshal, 'isBypassed', lambda x: False)
 	return pagedIterator(XMLListSearch, argv, 'ListPage', 'Lists', 'List')
 
 def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
