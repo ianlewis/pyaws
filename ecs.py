@@ -174,9 +174,11 @@ def query(url):
 	return dom
 
 
-def rawIterator(XMLSearch, arguments, kwItems, kwItem):
+def rawIterator(XMLSearch, arguments, plugins, kwItems, kwItem):
 	dom = XMLSearch(** arguments)
-	(items, len) = createObjects(dom, kwItems, kwItem)
+	plugins['isCollective'] = lambda x: x == kwItems
+	plugins['isCollected'] = lambda x: x == kwItem
+	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator([]))
 	return items
 
 class wrappedIterator(list):
@@ -187,21 +189,26 @@ class wrappedIterator(list):
 class pagedIterator:
 	'''Return a page-based iterator'''
 
-	def __init__(self, XMLSearch, arguments, kwPage, kwItems, kwItem):
+	def __init__(self, XMLSearch, arguments, plugins, kwPage, kwItems, kwItem):
 		"""XMLSearch: the callback function that returns the DOM
 		arguments: the arguments for XMLSearch
 		kwPage, kwItems, kwItem: page, items, item keyword to organize the object
 		"""
+		# TODO: kwItem is useless
 		self.search = XMLSearch 
 		self.arguments = arguments 
 		self.keywords ={ 'Page':kwPage, 'Items':kwItems, 'Item':kwItem } 
-		try:
-			self.page = arguments[kwPage] 
-		except KeyError:
-			self.page = 1
+		plugins['isCollective'] = lambda x: x == kwItems
+		plugins['isCollected'] = lambda x: x == kwItem
+		self.plugins = plugins
+		self.page = arguments[kwPage] or 1
 		self.index = 0
 		dom = self.search(** self.arguments)
-		(self.items, self.len) = createObjects(dom, kwItems, kwItem)
+		self.items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
+		try:
+			self.len = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
+		except AttributeError, e:
+			self.len = len(self.items)
 
 	def __len__(self):
 		return self.len
@@ -229,28 +236,31 @@ class pagedIterator:
 		index = num % 10
 		if page != self.page:
 			self.arguments[self.keywords['Page']] = page
-			(self.items, unused) = createObjects(self.search (**self.arguments), self.keywords['Items'], self.keywords['Item'])
-		self.page = page
+			dom = self.search(** self.arguments)
+			self.items = unmarshal(dom.getElementsByTagName(self.keywords['Items']).item(0), self.plugins, wrappedIterator())
+			self.page = page
 
 		return self.items[index]
 
 
-def createObjects(dom, kwItems, kwItem):
-	items = getattr(unmarshal(dom.getElementsByTagName(kwItems).item(0)), kwItem)
-	if type(items) <> type([]):
-		items = [items]
+def createList(dom, kwItems, plugins):
+	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator([]))
 	try:
 		total = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
 	except AttributeError, e:
 		total = len(items)
 	return (items, total)
 
-def unmarshal(element, rc=None):
+def unmarshal(element, plugins=None, rc=None):
 	"""this core function populate the object using the DOM, 
 	which is inspired by Mark Pilgrim (f8dy@diveintomark.org)"""
 
 	if(rc == None):
 		rc = Bag()
+
+	if(plugins == None):
+		plugins = {}
+
 	childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
 
 	if childElements:
@@ -259,18 +269,18 @@ def unmarshal(element, rc=None):
 			if hasattr(rc, key):
 				if type(getattr(rc, key)) <> type([]):
 					setattr(rc, key, [getattr(rc, key)])
-				setattr(rc, key, getattr(rc, key) + [unmarshal(child)])
+				setattr(rc, key, getattr(rc, key) + [unmarshal(child, plugins)])
 			elif isinstance(child, minidom.Element):
-				if hasattr(unmarshal, 'isPrivoted') and unmarshal.isPrivoted(child.tagName):
-					unmarshal(child, rc)
-				elif hasattr(unmarshal, 'isBypassed') and unmarshal.isBypassed(child.tagName):
+				if plugins.has_key('isPrivoted') and plugins['isPrivoted'](child.tagName):
+						unmarshal(child, plugins, rc)
+				elif plugins.has_key('isBypassed') and plugins['isBypassed'](child.tagName):
 					continue
-				elif hasattr(unmarshal, 'isCollective') and unmarshal.isCollective(child.tagName):
-					setattr(rc, key, unmarshal(child, wrappedIterator([])))
-				elif hasattr(unmarshal, 'isCollected') and unmarshal.isCollected(child.tagName):
-					rc.append(unmarshal(child))
+				elif plugins.has_key('isCollective') and plugins['isCollective'](child.tagName):
+					setattr(rc, key, unmarshal(child, plugins, wrappedIterator([])))
+				elif plugins.has_key('isCollected') and plugins['isCollected'](child.tagName):
+					rc.append(unmarshal(child, plugins))
 				else:
-					setattr(rc, key, unmarshal(child))
+					setattr(rc, key, unmarshal(child, plugins))
 	else:
 		rc = "".join([e.data for e in element.childNodes if isinstance(e, minidom.Text)])
 	return rc
@@ -281,10 +291,8 @@ def unmarshal(element, rc=None):
 
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	unmarshal.reset()
-	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	setattr(unmarshal, 'isBypassed', lambda x: False)
-	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', 'Item')
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	return pagedIterator(XMLItemLookup, argv, plugins, 'OfferPage', 'Items', 'Item')
 	
 def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	Operation = "ItemLookup"
@@ -294,9 +302,8 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 
 def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	unmarshal.reset()
-	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	return pagedIterator(XMLItemSearch, argv, "ItemPage", 'Items', 'Item')
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	return pagedIterator(XMLItemSearch, argv, plugins, "ItemPage", 'Items', 'Item')
 
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	Operation = "ItemSearch"
@@ -307,9 +314,8 @@ def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None
 
 def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	unmarshal.reset()
-	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	return rawIterator(XMLSimilarityLookup, argv, 'Items' , 'Item')
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	return rawIterator(XMLSimilarityLookup, argv, plugins, 'Items' , 'Item')
 
 def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	Operation = "SimilarityLookup"
@@ -320,9 +326,8 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 # ListOperation
 def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	unmarshal.reset()
-	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	return pagedIterator(XMLListLookup, argv, 'ProductPage', 'Lists' , 'List')
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	return pagedIterator(XMLListLookup, argv, plugins, 'ProductPage', 'Lists' , 'List')
 
 def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	Operation = "ListLookup"
@@ -332,9 +337,8 @@ def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=No
 
 def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	unmarshal.reset()
-	setattr(unmarshal, 'isPrivoted', lambda x: x == 'ItemAttributes')
-	return pagedIterator(XMLListSearch, argv, 'ListPage', 'Lists', 'List')
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	return pagedIterator(XMLListSearch, argv, plugins, 'ListPage', 'Lists', 'List')
 
 def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "ListSearch"
@@ -419,30 +423,18 @@ def _fromListToItems(argv, items, id, actions):
 
 
 def _cartOperation(dom):
-	unmarshal.reset()
-	setattr(unmarshal, 'isBypassed', lambda x: x == 'Request')
-	setattr(unmarshal, 'isCollective', lambda x: x in ('CartItems', 'SavedForLaterItems'))
-	setattr(unmarshal, 'isCollected', lambda x: x in ('CartItem', 'SavedForLaterItem'))
-	return unmarshal(dom.getElementsByTagName('Cart').item(0))
+	plugins = {'isBypassed': lambda x: x == 'Request',
+		'isCollective': lambda x: x in ('CartItems', 'SavedForLaterItems'),
+		'isCollected': lambda x: x in ('CartItem', 'SavedForLaterItem') }
+	return unmarshal(dom.getElementsByTagName('Cart').item(0), plugins)
 
-
-def _resetUnmarshal():
-	for x in ('isPrivoted', 'isByPassed', 'isCollective', 'isCollected'):
-		try:
-			delattr(unmarshal, x)
-		except AttributeError:
-			pass
-
-setattr(unmarshal, 'reset', _resetUnmarshal)
-del _resetUnmarshal
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
 	books = ItemSearch("python", SearchIndex="Books")
 	items = (books[0], books[1], books[2])
-	qs = (5, 3, 5)
-
-	cart = CartCreate(items, qs);
+	qs = (1, 3, 5)
+	cart = CartCreate(items, qs)
 	import pdb
 	pdb.set_trace()
 
