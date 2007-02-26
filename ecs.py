@@ -32,8 +32,6 @@ LICENSE_KEY = None;
 HTTP_PROXY = None
 LOCALE = "us"
 VERSION = "2005-10-05"
-_privots = ['ItemAttributes']
-_bypass = ['CartItems']
 
 
 _supportedLocales = {
@@ -355,7 +353,7 @@ def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	for x in ('Items', 'Quantities'):
 		del argv[x]
 
-	_fromListToItems(Items, Quantities, argv)
+	_fromListToItems(argv, Items, 'ASIN', Quantities)
 	return query(buildRequest(argv))
 
 def CartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
@@ -372,13 +370,12 @@ def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None)
 	for x in ('Items', 'Cart', 'Quantities'):
 		del argv[x]
 
-	_fromListToItems(Items, Quantities, argv)
+	_fromListToItems(argv, Items, 'ASIN', Quantities)
 	return query(buildRequest(argv))
 
 def CartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	dom =  XMLCartGet(** argv)
-	print dom.toprettyxml()
 	return _cartOperation(dom)
 
 def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
@@ -391,20 +388,43 @@ def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 
 	return query(buildRequest(argv))
 
+def CartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	dom =  XMLCartModify(** argv)
+	return _cartOperation(dom)
 
+def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "CartModify"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	CartId = Cart.CartId
+	HMAC = urllib.quote(Cart.HMAC)
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	for x in ('Cart', 'Items', 'Actions'):
+		del argv[x]
 
-def _fromListToItems(items, quantities, argv):
+	_fromListToItems(argv, Items, 'CartItemId', Actions)
+	return query(buildRequest(argv))
+	
+
+def _fromListToItems(argv, items, id, actions):
 	for i in range(len(items)):
-		argv["Item.%d.ASIN" % (i+1)] = items[i].ASIN;
-		argv["Item.%d.Quantity" % (i+1)] = quantities[i]
+		argv["Item.%d.%s" % (i+1, id)] = getattr(items[i], id);
+		action = actions[i]
+		if isinstance(action, int):
+			argv["Item.%d.Quantity" % (i+1)] = action
+		else:
+			argv["Item.%d.Action" % (i+1)] = action
+
 
 def _cartOperation(dom):
 	setattr(unmarshal, 'isPrivoted', lambda x: False)
 	setattr(unmarshal, 'isBypassed', lambda x: False)
+
+	# Get all cart items
 	(items, len) = createObjects(dom, 'CartItems', 'CartItem')
 	it = wrappedIterator(items)
 
-	setattr(unmarshal, 'isBypassed', lambda x: x in ['CartItems', 'Request'])
+	setattr(unmarshal, 'isBypassed', lambda x: x in ['CartItem', 'Request', 'SavedForLaterItems'])
 	unmarshal(dom.getElementsByTagName('Cart').item(0), it)
 	return it
 		
@@ -413,12 +433,10 @@ if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
 	books = ItemSearch("python", SearchIndex="Books")
 	items = (books[0], books[1], books[2])
-	qs = (1, 3, 5)
+	qs = (5, 3, 5)
 
 	cart = CartCreate(items, qs);
-	newcart = CartGet(cart)
+	newcart = CartModify(cart, [cart[0], cart[1]], [2, 'SaveForLater']) 
+	import pdb
+	pdb.set_trace()
 
-	for i in range(len(cart)):
-		print cart[i].ASIN, newcart[i].ASIN
-
-	
