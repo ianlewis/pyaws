@@ -82,8 +82,7 @@ class CartTest( unittest.TestCase ):
 			self.assertEqual(qs[i], int(self.cart.CartItems[i].Quantity))
 
 	def testCartAdd(self):
-		if self.cart == None:
-			self.testCartCreate() 
+		self.testCartCreate() 
 
 		l = []
 		for x in self.cart.CartItems:
@@ -104,8 +103,7 @@ class CartTest( unittest.TestCase ):
 			self.assert_( (int(item.ASIN), int(item.Quantity)) in l)
 
 	def testCartGet(self):
-		if self.cart == None:
-			self.testCartCreate() 
+		self.testCartCreate() 
 
 		cart = ecs.CartGet(self.cart)
 		for i in range(len(cart.CartItems)):
