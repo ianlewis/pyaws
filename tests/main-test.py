@@ -134,6 +134,13 @@ class CartTest( unittest.TestCase ):
 		self.failIf(hasattr(cart, 'CartItems'))
 		self.failUnless(hasattr(cart, 'SavedForLaterItems'))
 
+class SellerTest(unittest.TestCase):
+	def testSellerLookup(self):
+		# TODO: We need another SellerId here
+		sellers = ecs.SellerLookup(['A3ENSIQ3ZA4FFN'])
+		self.assertEqual(sellers[0].Nickname, u'abebooks')
+
+
 
 if __name__ == "__main__" :
 	unittest.main()

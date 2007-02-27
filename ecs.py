@@ -425,11 +425,28 @@ def __cartOperation(dom):
 		'isCollected': lambda x: x in ('CartItem', 'SavedForLaterItem') }
 	return unmarshal(dom.getElementsByTagName('Cart').item(0), plugins)
 
+# Seller Operation
+def SellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	plugins = {'isBypassed': lambda x: x == 'Request'}
+	return rawIterator(XMLSellerLookup, argv, plugins, 'Sellers', 'Seller')
+
+
+def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "SellerLookup"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	SellerId = ",".join(Sellers)
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	del argv['Sellers']
+
+	return query(buildRequest(argv))
+
+
+
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-	books = ItemSearch("python", SearchIndex="Books")
-	items = (books[0], books[1], books[2])
-	qs = (1, 3, 5)
-	cart = CartCreate(items, qs)
+	sellers = SellerLookup(['A3ENSIQ3ZA4FFN'])
+	import pdb
+	pdb.set_trace()
 
