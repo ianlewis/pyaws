@@ -394,6 +394,20 @@ def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None)
 	__fromListToItems(argv, Items, 'CartItemId', Actions)
 	return query(buildRequest(argv))
 	
+def CartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	dom =  XMLCartClear(** argv)
+	return __cartOperation(dom)
+
+def XMLCartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "CartClear"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	CartId = Cart.CartId
+	HMAC = urllib.quote(Cart.HMAC)
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	del argv['Cart']
+
+	return query(buildRequest(argv))
 
 def __fromListToItems(argv, items, id, actions):
 	for i in range(len(items)):
@@ -418,6 +432,4 @@ if __name__ == "__main__" :
 	items = (books[0], books[1], books[2])
 	qs = (1, 3, 5)
 	cart = CartCreate(items, qs)
-	import pdb
-	pdb.set_trace()
 

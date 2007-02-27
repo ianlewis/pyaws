@@ -126,6 +126,14 @@ class CartTest( unittest.TestCase ):
 		self.assertEqual(cart.SavedForLaterItems[0].Title, self.cart.CartItems[2].Title)
 		self.assertEqual(cart.SavedForLaterItems[0].Quantity, self.cart.CartItems[2].Quantity)
 
+	def testCartClear(self):
+		self.testCartCreate()
+
+		cart = ecs.CartModify(self.cart, (self.cart.CartItems[1], self.cart.CartItems[2]), (10, 'SaveForLater'))
+		cart = ecs.CartClear(cart)
+		self.failIf(hasattr(cart, 'CartItems'))
+		self.failUnless(hasattr(cart, 'SavedForLaterItems'))
+
 
 if __name__ == "__main__" :
 	unittest.main()
