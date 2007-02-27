@@ -140,6 +140,10 @@ class SellerTest(unittest.TestCase):
 		sellers = ecs.SellerLookup(['A3ENSIQ3ZA4FFN'])
 		self.assertEqual(sellers[0].Nickname, u'abebooks')
 
+class CustomerTest(unittest.TestCase):
+	def testCustomerContentSearch(self):
+		cs = ecs.CustomerContentSearch('Sam', None, 20)
+		self.assertEqual(len(cs), 20)
 
 
 if __name__ == "__main__" :

@@ -441,12 +441,29 @@ def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 
 	return query(buildRequest(argv))
 
+def CustomerContentSearch(Name, Email, CustomerPage=1, ResponseGroup=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	plugins = {'isBypassed': lambda x: x == 'Request'}
+	return rawIterator(XMLCustomerContentSearch, argv, plugins, 'Customers', 'Customer')
+
+def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "CustomerContentSearch"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	for x in ('Name', 'Email'):
+		if not argv[x]:
+			del argv[x]
+	return query(buildRequest(argv))
+
+
+
+
 
 
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-	sellers = SellerLookup(['A3ENSIQ3ZA4FFN'])
-	import pdb
-	pdb.set_trace()
+	cs = CustomerContentSearch('Sam', None, 20)
+	for x in cs:
+		print x.CustomerId
 
