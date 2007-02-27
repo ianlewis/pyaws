@@ -34,16 +34,17 @@ LOCALE = "us"
 VERSION = "2005-10-05"
 
 
-_supportedLocales = {
-		"us" : (None, "webservices.amazon.com"),   
-		"uk" : ("uk", "webservices.amazon.co.uk"),
-		"de" : ("de", "webservices.amazon.de"),
-		"jp" : ("jp", "webservices.amazon.co.jp"),
-		"fr" : ("fr", "webservices.amazon.fr"),
-		"ca" : ("ca", "webservices.amazon.ca")
+__supportedLocales = {
+		None : "webservices.amazon.com",  
+		"us" : "webservices.amazon.com",   
+		"uk" : "webservices.amazon.co.uk",
+		"de" : "webservices.amazon.de",
+		"jp" : "webservices.amazon.co.jp",
+		"fr" : "webservices.amazon.fr",
+		"ca" : "webservices.amazon.ca"
 	}
 
-_licenseKeys = (
+__licenseKeys = (
 	(lambda key: key),
 	(lambda key: LICENSE_KEY), 
 	(lambda key: os.environ.get('AWS_LICENSE_KEY', None))
@@ -85,16 +86,13 @@ class Bag : pass
 
 # Utilities functions
 
-def _checkLocaleSupported(locale):
-	if not _supportedLocales.has_key(locale):
-		raise BadLocale, ("Unsupported locale. Locale must be one of: %s" %
-			string.join(_supportedLocales, ", "))
-
 
 def setLocale(locale):
 	"""set locale"""
 	global LOCALE
-	_checkLocaleSupported(locale)
+	if not __supportedLocales.has_key(locale):
+		raise BadLocale, ("Unsupported locale. Locale must be one of: %s" %
+			string.join(__supportedLocales, ", "))
 	LOCALE = locale
 
 
@@ -110,7 +108,7 @@ def setLicenseKey(license_key=None):
 	see module docs for search order"""
 
 	global LICENSE_KEY
-	for get in _licenseKeys:
+	for get in __licenseKeys:
 		rc = get(license_key)
 		if rc: 
 			LICENSE_KEY = rc;
@@ -138,14 +136,8 @@ def setVersion(version):
 
 def buildRequest(argv):
 	"""Build the REST Url from argv"""
-	url = "http://" + _supportedLocales[LOCALE][1] + "/onca/xml?Service=AWSECommerceService"
-	for k,v in argv.items():
-		if v:
-			url += '&%s=%s' % (k,v)
-
-	print "url=", url
-	return url;
-
+	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&"
+	return url + '&'.join(['%s=%s' % (k,v) for (k,v) in argv.items() if v]) 
 
 def buildException(els):
 	"""Build the exception according to the returned error
@@ -178,7 +170,7 @@ def rawIterator(XMLSearch, arguments, plugins, kwItems, kwItem):
 	dom = XMLSearch(** arguments)
 	plugins['isCollective'] = lambda x: x == kwItems
 	plugins['isCollected'] = lambda x: x == kwItem
-	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator([]))
+	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
 	return items
 
 class wrappedIterator(list):
@@ -194,32 +186,31 @@ class pagedIterator:
 		arguments: the arguments for XMLSearch
 		kwPage, kwItems, kwItem: page, items, item keyword to organize the object
 		"""
-		# TODO: kwItem is useless
-		self.search = XMLSearch 
-		self.arguments = arguments 
-		self.keywords ={ 'Page':kwPage, 'Items':kwItems, 'Item':kwItem } 
+		self.__search = XMLSearch 
+		self.__arguments = arguments 
+		self.__keywords ={'Page':kwPage, 'Items':kwItems} 
 		plugins['isCollective'] = lambda x: x == kwItems
 		plugins['isCollected'] = lambda x: x == kwItem
-		self.plugins = plugins
-		self.page = arguments[kwPage] or 1
-		self.index = 0
-		dom = self.search(** self.arguments)
-		self.items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
+		self.__plugins = plugins
+		self.__page = arguments[kwPage] or 1
+		self.__index = 0
+		dom = self.__search(** self.__arguments)
+		self.__items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
 		try:
-			self.len = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
+			self.__len = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
 		except AttributeError, e:
-			self.len = len(self.items)
+			self.__len = len(self.__items)
 
 	def __len__(self):
-		return self.len
+		return self.__len
 
 	def __iter__(self):
 		return self
 
 	def next(self):
-		if self.index < self.len:
-			self.index = self.index + 1
-			return self.__getitem__(self.index-1)
+		if self.__index < self.__len:
+			self.__index = self.__index + 1
+			return self.__getitem__(self.__index-1)
 		else:
 			raise StopIteration
 
@@ -229,27 +220,19 @@ class pagedIterator:
 		except TypeError, e:
 			raise e
 
-		if num >= self.len:
+		if num >= self.__len:
 			raise IndexError
 
 		page = num / 10 + 1
 		index = num % 10
-		if page != self.page:
-			self.arguments[self.keywords['Page']] = page
-			dom = self.search(** self.arguments)
-			self.items = unmarshal(dom.getElementsByTagName(self.keywords['Items']).item(0), self.plugins, wrappedIterator())
-			self.page = page
+		if page != self.__page:
+			self.__arguments[self.__keywords['Page']] = page
+			dom = self.__search(** self.__arguments)
+			self.__items = unmarshal(dom.getElementsByTagName(self.__keywords['Items']).item(0), self.__plugins, wrappedIterator())
+			self.__page = page
 
-		return self.items[index]
+		return self.__items[index]
 
-
-def createList(dom, kwItems, plugins):
-	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator([]))
-	try:
-		total = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
-	except AttributeError, e:
-		total = len(items)
-	return (items, total)
 
 def unmarshal(element, plugins=None, rc=None):
 	"""this core function populate the object using the DOM, 
@@ -350,7 +333,7 @@ def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None
 def CartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	dom =  XMLCartCreate(** argv)
-	return _cartOperation(dom)
+	return __cartOperation(dom)
 
 def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartCreate"
@@ -359,13 +342,13 @@ def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	for x in ('Items', 'Quantities'):
 		del argv[x]
 
-	_fromListToItems(argv, Items, 'ASIN', Quantities)
+	__fromListToItems(argv, Items, 'ASIN', Quantities)
 	return query(buildRequest(argv))
 
 def CartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	dom =  XMLCartAdd(** argv)
-	return _cartOperation(dom)
+	return __cartOperation(dom)
 
 def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartAdd"
@@ -376,13 +359,13 @@ def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None)
 	for x in ('Items', 'Cart', 'Quantities'):
 		del argv[x]
 
-	_fromListToItems(argv, Items, 'ASIN', Quantities)
+	__fromListToItems(argv, Items, 'ASIN', Quantities)
 	return query(buildRequest(argv))
 
 def CartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	dom =  XMLCartGet(** argv)
-	return _cartOperation(dom)
+	return __cartOperation(dom)
 
 def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartGet"
@@ -397,7 +380,7 @@ def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 def CartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	dom =  XMLCartModify(** argv)
-	return _cartOperation(dom)
+	return __cartOperation(dom)
 
 def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartModify"
@@ -408,11 +391,11 @@ def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None)
 	for x in ('Cart', 'Items', 'Actions'):
 		del argv[x]
 
-	_fromListToItems(argv, Items, 'CartItemId', Actions)
+	__fromListToItems(argv, Items, 'CartItemId', Actions)
 	return query(buildRequest(argv))
 	
 
-def _fromListToItems(argv, items, id, actions):
+def __fromListToItems(argv, items, id, actions):
 	for i in range(len(items)):
 		argv["Item.%d.%s" % (i+1, id)] = getattr(items[i], id);
 		action = actions[i]
@@ -422,7 +405,7 @@ def _fromListToItems(argv, items, id, actions):
 			argv["Item.%d.Action" % (i+1)] = action
 
 
-def _cartOperation(dom):
+def __cartOperation(dom):
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x in ('CartItems', 'SavedForLaterItems'),
 		'isCollected': lambda x: x in ('CartItem', 'SavedForLaterItem') }
