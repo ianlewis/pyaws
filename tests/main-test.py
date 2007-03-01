@@ -86,21 +86,21 @@ class CartTest( unittest.TestCase ):
 
 		l = []
 		for x in self.cart.CartItems:
-			z = (int(x.ASIN), int(x.Quantity))
+			z = (x.ASIN, int(x.Quantity))
 			l.append(z)
 			
 		items = (self.books[5], self.books[8])
 		qs = (5, 8)
-		z = (int(self.books[5].ASIN), 5)
+		z = (self.books[5].ASIN, 5)
 		l.append(z)
-		z = (int(self.books[8].ASIN), 8)
+		z = (self.books[8].ASIN, 8)
 		l.append(z)
 
 		self.cart = ecs.CartAdd(self.cart, items, qs)
 
 		# check the item
 		for item in self.cart.CartItems:
-			self.assert_( (int(item.ASIN), int(item.Quantity)) in l)
+			self.assert_( (item.ASIN, int(item.Quantity)) in l)
 
 	def testCartGet(self):
 		self.testCartCreate() 

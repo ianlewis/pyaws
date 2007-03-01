@@ -168,8 +168,6 @@ def query(url):
 
 def rawIterator(XMLSearch, arguments, plugins, kwItems, kwItem):
 	dom = XMLSearch(** arguments)
-	plugins['isCollective'] = lambda x: x == kwItems
-	plugins['isCollected'] = lambda x: x == kwItem
 	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
 	return items
 
@@ -189,8 +187,6 @@ class pagedIterator:
 		self.__search = XMLSearch 
 		self.__arguments = arguments 
 		self.__keywords ={'Page':kwPage, 'Items':kwItems} 
-		plugins['isCollective'] = lambda x: x == kwItems
-		plugins['isCollected'] = lambda x: x == kwItem
 		self.__plugins = plugins
 		self.__page = arguments[kwPage] or 1
 		self.__index = 0
@@ -274,7 +270,9 @@ def unmarshal(element, plugins=None, rc=None):
 
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes', 
+		'isCollective': lambda x: x == 'Items', 
+		'isCollected': lambda x: x == 'Item'}
 	return pagedIterator(XMLItemLookup, argv, plugins, 'OfferPage', 'Items', 'Item')
 	
 def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
@@ -285,7 +283,9 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 
 def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes',
+		'isCollective': lambda x: x == 'Items', 
+		'isCollected': lambda x: x == 'Item'}
 	return pagedIterator(XMLItemSearch, argv, plugins, "ItemPage", 'Items', 'Item')
 
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -297,7 +297,9 @@ def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None
 
 def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes',
+		'isCollective': lambda x: x == 'Items',
+		'isCollected': lambda x: x == 'Item'}
 	return rawIterator(XMLSimilarityLookup, argv, plugins, 'Items' , 'Item')
 
 def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -309,7 +311,9 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 # ListOperation
 def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes',
+		'isCollective': lambda x: x == 'Lists', 
+		'isCollected': lambda x: x == 'List'}
 	return pagedIterator(XMLListLookup, argv, plugins, 'ProductPage', 'Lists' , 'List')
 
 def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -320,7 +324,9 @@ def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=No
 
 def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes'}
+	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes',
+		'isCollective': lambda x: x == 'Lists', 
+		'isCollected': lambda x: x == 'List'}
 	return pagedIterator(XMLListSearch, argv, plugins, 'ListPage', 'Lists', 'List')
 
 def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
@@ -428,7 +434,9 @@ def __cartOperation(dom):
 # Seller Operation
 def SellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request'}
+	plugins = {'isBypassed': lambda x: x == 'Request',
+		'isCollective': lambda x: x == 'Sellers',
+		'isCollected': lambda x: x == 'Seller'}
 	return rawIterator(XMLSellerLookup, argv, plugins, 'Sellers', 'Seller')
 
 
@@ -441,9 +449,11 @@ def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 
 	return query(buildRequest(argv))
 
-def CustomerContentSearch(Name, Email, CustomerPage=1, ResponseGroup=None):
+def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request'}
+	plugins = {'isBypassed': lambda x: x == 'Request',
+		'isCollective': lambda x: x in ('Customers', 'CustomerReviews'),
+		'isCollected': lambda x: x in ('Customer', 'Review')}
 	return rawIterator(XMLCustomerContentSearch, argv, plugins, 'Customers', 'Customer')
 
 def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
@@ -456,14 +466,23 @@ def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGrou
 	return query(buildRequest(argv))
 
 
+def CustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	plugins = {'isBypassed': lambda x: x == 'Request',
+		'isCollective': lambda x: x == 'Customers',
+		'isCollected': lambda x: x == 'Customer'}
+	return rawIterator(XMLCustomerContentLookup, argv, plugins, 'Customers', 'Customer')
 
-
-
+def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "CustomerContentLookup"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	return query(buildRequest(argv))
 
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-	cs = CustomerContentSearch('Sam', None, 20)
-	for x in cs:
-		print x.CustomerId
+	cs = CustomerContentLookup('A2KEKKJ9CAC2KC', ResponseGroup='CustomerReviews')
+	import pdb
+	pdb.set_trace()
 
