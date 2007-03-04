@@ -250,7 +250,7 @@ def unmarshal(element, plugins=None, rc=None):
 					setattr(rc, key, [getattr(rc, key)])
 				setattr(rc, key, getattr(rc, key) + [unmarshal(child, plugins)])
 			elif isinstance(child, minidom.Element):
-				if plugins.has_key('isPrivoted') and plugins['isPrivoted'](child.tagName):
+				if plugins.has_key('isPivoted') and plugins['isPivoted'](child.tagName):
 						unmarshal(child, plugins, rc)
 				elif plugins.has_key('isBypassed') and plugins['isBypassed'](child.tagName):
 					continue
@@ -270,7 +270,7 @@ def unmarshal(element, plugins=None, rc=None):
 
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes', 
+	plugins = {'isPivoted': lambda x: x == 'ItemAttributes', 
 		'isCollective': lambda x: x == 'Items', 
 		'isCollected': lambda x: x == 'Item'}
 	return pagedIterator(XMLItemLookup, argv, plugins, 'OfferPage', 'Items', 'Item')
@@ -283,7 +283,7 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 
 def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes',
+	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Items', 
 		'isCollected': lambda x: x == 'Item'}
 	return pagedIterator(XMLItemSearch, argv, plugins, "ItemPage", 'Items', 'Item')
@@ -297,7 +297,7 @@ def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None
 
 def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes',
+	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Items',
 		'isCollected': lambda x: x == 'Item'}
 	return rawIterator(XMLSimilarityLookup, argv, plugins, 'Items' , 'Item')
@@ -311,7 +311,7 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 # ListOperation
 def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes',
+	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Lists', 
 		'isCollected': lambda x: x == 'List'}
 	return pagedIterator(XMLListLookup, argv, plugins, 'ProductPage', 'Lists' , 'List')
@@ -324,7 +324,7 @@ def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=No
 
 def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPrivoted': lambda x: x == 'ItemAttributes',
+	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Lists', 
 		'isCollected': lambda x: x == 'List'}
 	return pagedIterator(XMLListSearch, argv, plugins, 'ListPage', 'Lists', 'List')
