@@ -481,8 +481,6 @@ def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAc
 
 
 if __name__ == "__main__" :
-	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
+	setLicenseKey("YOUR-LICENSE-HERE")
 	cs = CustomerContentLookup('A2KEKKJ9CAC2KC', ResponseGroup='CustomerReviews')
-	import pdb
-	pdb.set_trace()
 
