@@ -1,0 +1,183 @@
+a {
+	color: #7994b7;
+	text-decoration: none;
+    font-weight: bold;
+}
+
+.menuclass a {
+	color: #555555;
+	text-decoration: none;
+    font-weight: bold;
+}
+
+
+a:hover {
+	color: #777777;
+    text-decoration: underline;
+}
+
+h3 {
+	border-bottom: 1px solid #DDDDDD;
+}
+
+ul {
+	list-style: none;
+	margin-left: 0;
+	padding-left: 2em;
+	text-indent: -1em;
+}
+
+body {
+	margin:0;
+	padding:0;
+	height:100%;
+}
+
+#mainDiv {
+	background: #6a5c4e;
+	height: 100%;
+	padding: 0px 0px 0px 0px;  
+}
+
+#boxDiv{
+	background-image: url(bg.png);
+	background-repeat: repeat-y;
+	background-position: top center;
+	height: 100%;
+	width: 750px;
+	margin: 0px auto;
+	padding: 0px 18px 0px 18px;  
+}
+
+#LogoDiv {
+    padding-top: 5px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    padding-right: 5px;
+    clear: both;
+}
+
+#topDiv {
+    background: url("stripes.png");
+    background-repeat: repeat;
+    padding: 15px 0px 15px 570px;
+}
+
+#LinkDiv {
+	font: 10pt/16pt sans-serif;
+	border-bottom: 1px solid #888888;
+	border-top: 1px solid #888888;
+	padding: 5px 0px 5px 15px;
+}
+
+#NewsDiv {
+	font: 10pt/16pt sans-serif; 
+}
+
+#textDiv {
+	font: 10pt/16pt sans-serif;
+	color: #333333;
+	width: 718px;
+	padding: 10px 0px 15px 15px;
+}
+
+#FeaturesDiv {
+}
+
+
+#catDiv {
+    float: right;
+    position: relative;
+    right: 5px;
+    bottom: 28px;
+    margin-left: -15px;
+}
+
+#cat2Div {
+    float: left;
+    position: relative;
+    right: 30px;
+    bottom: 16px;
+    margin-right: -30px;
+}
+
+#BottomDiv {
+    background: url("stripes.png");
+    background-repeat: repeat;
+	padding: 5px 10px 0px 10px;
+	height: 47px;
+	border-top: 1px solid #888888;
+	border-bottom: 1px solid #888888;
+}
+
+#BottomTextDiv {
+	font: 10pt/16pt sans-serif; 
+	padding-top: 11px;
+}
+
+#SFDiv {
+	float: right;
+	padding-top: 5px;
+}
+
+#SPDiv {
+	float: right;
+	padding-left: 5px;
+}
+
+#CopyDiv {
+	text-align: center;
+}
+
+.example {
+  margin-left: 11px;
+  clear: left;
+}
+
+.example h3 {
+  font-size: 100%;
+}
+
+samp, code, tt, pre  {
+  font-weight: normal;
+  font-family: monospace;
+  font-size: small;
+}
+
+/* ----- Python code syntax coloring ----- */
+.computeroutput, .traceback, .pykeyword, .pystring, .pycomment, .pyfunction, .pyclass {
+  background-color: white;
+}
+
+.pykeyword, .pyfunction, .pyclass {
+  font-weight: bold;
+}
+
+.computeroutput {
+  color: teal;
+}
+
+.traceback {
+  color: red;
+}
+
+.pykeyword {
+  color: navy;
+}
+
+.pystring {
+  color: olive;
+}
+
+.pycomment {
+  color: green;
+  font-style: italic;
+}
+
+.pyfunction {
+  color: teal;
+}
+
+.pyclass {
+  color: blue;
+}
