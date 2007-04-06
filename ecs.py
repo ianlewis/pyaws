@@ -135,9 +135,10 @@ def setVersion(version):
 	
 
 def buildRequest(argv):
-	"""Build the REST Url from argv"""
+	"""Build the REST Url from argv,
+	NOTE: Please don't quote the string before this function call"""
 	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&"
-	return url + '&'.join(['%s=%s' % (k,v) for (k,v) in argv.items() if v]) 
+	return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
 
 def buildException(els):
 	"""Build the exception according to the returned error
@@ -291,7 +292,6 @@ def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, P
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	Operation = "ItemSearch"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
-	Keywords = urllib.quote(Keywords)
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -360,7 +360,7 @@ def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None)
 	Operation = "CartAdd"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
-	HMAC = urllib.quote(Cart.HMAC)
+	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	for x in ('Items', 'Cart', 'Quantities'):
 		del argv[x]
@@ -377,7 +377,7 @@ def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartGet"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
-	HMAC = urllib.quote(Cart.HMAC)
+	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	del argv['Cart']
 
@@ -392,7 +392,7 @@ def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None)
 	Operation = "CartModify"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
-	HMAC = urllib.quote(Cart.HMAC)
+	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	for x in ('Cart', 'Items', 'Actions'):
 		del argv[x]
@@ -409,7 +409,7 @@ def XMLCartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartClear"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
-	HMAC = urllib.quote(Cart.HMAC)
+	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	del argv['Cart']
 

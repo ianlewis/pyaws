@@ -49,13 +49,13 @@ class QueryTest(unittest.TestCase):
 
 		self.assertEqual(book.ASIN, u'0596009259')
 		self.assertEqual(book.Title, u'Programming Python')
-		self.assertEqual(book.Manufacturer, u"O'Reilly Media")
+		self.assertEqual(book.Manufacturer, u"O'Reilly Media, Inc.")
 		self.assertEqual(book.ProductGroup, u'Book')
 		self.assertEqual(book.Author, u'Mark Lutz')
 
 
 	def testItemSearch(self):
-		books = ecs.ItemSearch("python", SearchIndex="Books")
+		books = ecs.ItemSearch("", Title="Python", SearchIndex="Books")
 		self.assert_(len(books) > 200, "We are expect more than 200 books are returned.")
 		self.assertNotEqual(books[100], None)
 	
