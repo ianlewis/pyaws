@@ -4,35 +4,34 @@ Based upon pyamazon (http://www.josephson.org/projects/pyamazon/) with
 efforts to meet the latest AWS specification.
 
 The Amazon's web APIs specication is described here:
-  http://www.amazon.com/webservices
+http://www.amazon.com/webservices
 
 You need a Amazon-provided license key to use these services.
 Follow the link above to get one.  These functions will look in
 several places (in this order) for the license key:
-- the "license_key" argument of each function
-- the module-level LICENSE_KEY variable (call setLicense once to set it)
-- an environment variable called AMAZON_LICENSE_KEY
-- foo would return the python object, XMLfoo returns the DOM object
+	- the "license_key" argument of each function
+	- the module-level LICENSE_KEY variable (call setLicense once to set it)
+	- an environment variable called AMAZON_LICENSE_KEY
+	- foo would return the python object, XMLfoo returns the DOM object
 
-
-TODO: 
-  - Add more decriptions about this module. 
+License: Python Software Foundation License
 """
+
 
 import os, urllib, string, inspect
 from xml.dom import minidom
 
 __author__ = "Kun Xi < kunxi@kunxi.org >"
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 __license__ = "Python Software Foundation"
 
 
-# Package-wide variables:
+"""Package-wide variables:
+"""
 LICENSE_KEY = None;
 HTTP_PROXY = None
 LOCALE = "us"
 VERSION = "2007-02-22"
-
 
 __supportedLocales = {
 		None : "webservices.amazon.com",  
@@ -50,8 +49,11 @@ __licenseKeys = (
 	(lambda key: os.environ.get('AWS_LICENSE_KEY', None))
    )
 
-# Exception class
-class AWSException(Exception) : pass
+
+class AWSException(Exception) : 
+	'''Base class for all AWS exceptions'''
+	pass
+
 class NoLicenseKey(AWSException) : pass
 class BadLocale(AWSException) : pass
 # Runtime exception
@@ -81,14 +83,18 @@ class ParameterRepeatedInRequest(AWSException): pass
 class RestrictedParameterValueCombination(AWSException): pass
 class XSLTTransformationError(AWSException): pass
 
+class Bag : 
+	'''Wrapper class for DOM nodes'''
+	pass
 
-class Bag : pass
+
 
 # Utilities functions
 
-
 def setLocale(locale):
-	"""set locale"""
+	"""set locale
+	
+	if unsupported locale is set, BadLocale is raised."""
 	global LOCALE
 	if not __supportedLocales.has_key(locale):
 		raise BadLocale, ("Unsupported locale. Locale must be one of: %s" %
@@ -105,7 +111,8 @@ def setLicenseKey(license_key=None):
 	"""set license key
 
 	license key can come from any number of locations;
-	see module docs for search order"""
+	see module docs for search order.
+	if no license key is specified, BadLocale is raised."""
 
 	global LICENSE_KEY
 	for get in __licenseKeys:
@@ -117,10 +124,12 @@ def setLicenseKey(license_key=None):
 
 
 def getLicenseKey():
-	"""get license key"""
+	"""get license key
+
+	if no license key is specified, BadLocale is raised."""
+
 	if not LICENSE_KEY:
 		raise NoLicenseKey, ("Please get the license key from  http://www.amazon.com/webservices")
-		
 	return LICENSE_KEY
 	
 
@@ -129,20 +138,19 @@ def getVersion():
 	return VERSION
 
 
-def setVersion(version):
-	global VERSION
-	VERSION = version
-	
-
 def buildRequest(argv):
-	"""Build the REST Url from argv,
-	NOTE: Please don't quote the string before this function call"""
+	"""Build the REST request URL from argv,
+	
+	all key, value pairs in argv are quoted."""
+
 	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&"
 	return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
 
+
 def buildException(els):
-	"""Build the exception according to the returned error
-	Notice: We just return the first error"""
+	"""Build the exception from the returned DOM node
+
+	Only the first exception is raised."""
 
 	error = els[0]
 	class_name = error.childNodes[0].firstChild.data[4:]
@@ -153,7 +161,9 @@ def buildException(els):
 
 
 def query(url):
-	"""Send the query url and return the DOM"""
+	"""Send the query url and return the DOM
+	
+	Exception is raised if there is errors"""
 	u = urllib.FancyURLopener(HTTP_PROXY)
 	usock = u.open(url)
 	dom = minidom.parse(usock)
@@ -163,21 +173,28 @@ def query(url):
 	if errors:
 		e = buildException(errors)
 		raise e
-	
 	return dom
 
-def rawObject(XMLSearch, arguments, kwItem, plugins=None):
-	dom = XMLSearch(** arguments)
-	item = unmarshal(dom.getElementsByTagName(kwItem).item(0), plugins) 
-	return item
 
+def rawObject(XMLSearch, arguments, kwItem, plugins=None):
+	'''Return a unique object'''
+
+	dom = XMLSearch(** arguments)
+	return unmarshal(dom.getElementsByTagName(kwItem).item(0), plugins) 
+
+	
 def rawIterator(XMLSearch, arguments, kwItems, plugins=None):
+	'''Return list of objects'''
+
 	dom = XMLSearch(** arguments)
 	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
 	return items
 
 class wrappedIterator(list):
-	'''A built-in list wrapper, we can add attributes later'''
+	'''Return inherited list object, 
+	
+	we may add more attributes later'''
+	
 	pass
 	
 
@@ -187,7 +204,8 @@ class pagedIterator:
 	def __init__(self, XMLSearch, arguments, kwPage, kwItems, plugins=None):
 		"""XMLSearch: the callback function that returns the DOM
 		arguments: the arguments for XMLSearch
-		kwPage, kwItems: page, items, item keyword to organize the object
+		kwPage, kwItems: Tag name of Page, Items to organize the object
+		plugins: please check unmarshal
 		"""
 		self.__search = XMLSearch 
 		self.__arguments = arguments 
@@ -236,17 +254,26 @@ class pagedIterator:
 
 
 def unmarshal(element, plugins=None, rc=None):
-	"""this core function populate the object using the DOM, 
-	which is inspired by Mark Pilgrim (f8dy@diveintomark.org)
-	Some enhancement:
+	"""Return the Bag object with attributes populated using DOM element
+
+	element: the root of the DOM element we are interested in
+	plugins: callback functions to fine-tune the object structure
+	rc: parent object, used in the recursive call
+
+	This core function is inspired by Mark Pilgrim (f8dy@diveintomark.org)
+	with some enhancement. Each node.tagName is evalued by plugins' callback
+	functions:
+		
 		if plugins['isBypassed'] is true:
 			this elment is ignored
 		if plugins['isPivoted'] is true:
 			this children of this elment is moved to grandparents
+			this object is ignored.
 		if plugins['isCollective'] is true:
 			this elment is mapped to []
 		if plugins['isCollected'] is true:
 			this children of elment is appended to grandparent
+			this object is ignored.
 	"""
 
 	if(rc == None):
@@ -284,78 +311,113 @@ def unmarshal(element, plugins=None, rc=None):
 # User interfaces
 
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
+	'''ItemLookup in ECS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes', 
 		'isCollective': lambda x: x == 'Items', 
 		'isCollected': lambda x: x == 'Item'}
 	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', plugins)
+
 	
 def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
+	'''DOM representation of ItemLookup in ECS'''
+
 	Operation = "ItemLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
+
 def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
+	'''ItemSearch in ECS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Items', 
 		'isCollected': lambda x: x == 'Item'}
 	return pagedIterator(XMLItemSearch, argv, "ItemPage", 'Items', plugins)
 
+
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
+	'''DOM representation of ItemSearch in ECS'''
+
 	Operation = "ItemSearch"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
+
 def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
+	'''SimilarityLookup in ECS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Items',
 		'isCollected': lambda x: x == 'Item'}
 	return rawIterator(XMLSimilarityLookup, argv, 'Items', plugins)
 
+
 def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
+	'''DOM representation of SimilarityLookup in ECS'''
+
 	Operation = "SimilarityLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
-# ListOperation
+
+# List Operations
+
 def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
+	'''ListLookup in ECS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Lists', 
 		'isCollected': lambda x: x == 'List'}
 	return pagedIterator(XMLListLookup, argv, 'ProductPage', 'Lists', plugins)
 
+
 def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
+	'''DOM representation of ListLookup in ECS'''
+
 	Operation = "ListLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
+
 def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
+	'''ListSearch in ECS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Lists', 
 		'isCollected': lambda x: x == 'List'}
 	return pagedIterator(XMLListSearch, argv, 'ListPage', 'Lists', plugins)
 
+
 def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of ListSearch in ECS'''
+
 	Operation = "ListSearch"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
+
 #Remote Shopping Cart Operations
 def CartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
+	'''CartCreate in ECS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	dom =  XMLCartCreate(** argv)
-	return __cartOperation(dom)
+	return __cartOperation(XMLCartCreate, argv)
+
 
 def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of CartCreate in ECS'''
+
 	Operation = "CartCreate"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -365,12 +427,17 @@ def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	__fromListToItems(argv, Items, 'ASIN', Quantities)
 	return query(buildRequest(argv))
 
+
 def CartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
+	'''CartAdd in ECS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	dom =  XMLCartAdd(** argv)
-	return __cartOperation(dom)
+	return __cartOperation(XMLCartAdd, argv)
+
 
 def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of CartAdd in ECS'''
+
 	Operation = "CartAdd"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
@@ -382,27 +449,34 @@ def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None)
 	__fromListToItems(argv, Items, 'ASIN', Quantities)
 	return query(buildRequest(argv))
 
+
 def CartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
+	'''CartGet in ECS'''
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	dom =  XMLCartGet(** argv)
-	return __cartOperation(dom)
+	return __cartOperation(XMLCartGet, argv)
+
 
 def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of CartGet in ECS'''
+
 	Operation = "CartGet"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	del argv['Cart']
-
 	return query(buildRequest(argv))
 
+
 def CartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
+	'''CartModify in ECS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	dom =  XMLCartModify(** argv)
-	return __cartOperation(dom)
+	return __cartOperation(XMLCartModify, argv)
+
 
 def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of CartModify in ECS'''
 	Operation = "CartModify"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
@@ -413,13 +487,17 @@ def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None)
 
 	__fromListToItems(argv, Items, 'CartItemId', Actions)
 	return query(buildRequest(argv))
+
 	
 def CartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
+	'''CartClear in ECS'''
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	dom =  XMLCartClear(** argv)
-	return __cartOperation(dom)
+	return __cartOperation(XMLCartClear, argv)
+
 
 def XMLCartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of CartClear in ECS'''
+
 	Operation = "CartClear"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
@@ -429,7 +507,10 @@ def XMLCartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 
 	return query(buildRequest(argv))
 
+
 def __fromListToItems(argv, items, id, actions):
+	'''Convert list to AWS REST arguments'''
+
 	for i in range(len(items)):
 		argv["Item.%d.%s" % (i+1, id)] = getattr(items[i], id);
 		action = actions[i]
@@ -439,14 +520,19 @@ def __fromListToItems(argv, items, id, actions):
 			argv["Item.%d.Action" % (i+1)] = action
 
 
-def __cartOperation(dom):
+def __cartOperation(XMLSearch, arguments):
+	'''Generic cart operation'''
+
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x in ('CartItems', 'SavedForLaterItems'),
 		'isCollected': lambda x: x in ('CartItem', 'SavedForLaterItem') }
-	return unmarshal(dom.getElementsByTagName('Cart').item(0), plugins)
+	return rawObject(XMLSearch, arguments, 'Cart', plugins)
+
 
 # Seller Operation
 def SellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
+	'''SellerLookup in AWS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Sellers',
@@ -455,6 +541,8 @@ def SellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 
 
 def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of SellerLookup in AWS'''
+
 	Operation = "SellerLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	SellerId = ",".join(Sellers)
@@ -464,18 +552,22 @@ def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 
 
 def SellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSAccessKeyId=None):
-	'''Notice: although the repsonse includes TotalPage, TotalResults, 
-	there is no ListingPage in the request, so pagedIterator does not work
-	here, we have to use rawIterator, hope Amazaon would fix this 
-	inconsistance soon'''
-	'''Notice: the parsing is the same as SellerListingSearch'''
+	'''SellerListingLookup in AWS
+
+	Notice: although the repsonse includes TotalPage, TotalResults, 
+	there is no ListingPage in the request, so we have to use rawIterator
+	instead of pagedIterator. Hope Amazaon would fix this inconsistance'''
+	
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'SellerListings', 
 		'isCollected': lambda x: x == 'SellerListing'}
 	return rawIterator(XMLSellerListingLookup, argv, "SellerListings", plugins)
 
+
 def XMLSellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of SellerListingLookup in AWS'''
+
 	Operation = "SellerListingLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -483,7 +575,8 @@ def XMLSellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, A
 
 
 def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None):
-	'''Notice: the parsing is the same as SellerListingLookup'''
+	'''SellerListingSearch in AWS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'SellerListings', 
@@ -492,6 +585,8 @@ def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Offer
 
 
 def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of SellerListingSearch in AWS'''
+
 	Operation = "SellerListingSearch"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -499,13 +594,18 @@ def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Of
 
 
 def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
+	'''CustomerContentSearch in AWS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x in ('Customers', 'CustomerReviews'),
 		'isCollected': lambda x: x in ('Customer', 'Review')}
 	return rawIterator(XMLCustomerContentSearch, argv, 'Customers', plugins)
 
+
 def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of CustomerContentSearch in AWS'''
+
 	Operation = "CustomerContentSearch"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -516,28 +616,38 @@ def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGrou
 
 
 def CustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None):
+	'''CustomerContentLookup in AWS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Customers',
 		'isCollected': lambda x: x == 'Customer'}
 	return rawIterator(XMLCustomerContentLookup, argv, 'Customers', plugins)
 
+
 def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of CustomerContentLookup in AWS'''
+
 	Operation = "CustomerContentLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
-# BrowseNode
 
+# BrowseNode
 def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
+	'''BrowseNodeLookup in AWS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Children',
 		'isCollected': lambda x: x == 'BrowseNode'}
 	return rawIterator(XMLBrowseNodeLookup, argv, 'BrowseNodes', plugins)
 
+
 def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of BrowseNodeLookup in AWS'''
+	
 	Operation = "BrowseNodeLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -545,8 +655,9 @@ def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 
 
 # Help
-
 def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
+	'''Help in AWS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request', 
 		'isCollective': lambda x: x in ('RequiredParameters', 
@@ -555,7 +666,10 @@ def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 		'isCollected': lambda x: x in ('Parameter', 'ResponseGroup') }
 	return rawObject(XMLHelp, argv, 'Information', plugins)
 
+
 def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of Help in AWS'''
+
 	Operation = "Help"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -563,20 +677,25 @@ def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 
 
 # Transaction
-
 def TransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None):
+	'''TransactionLookup in AWS'''
+
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request', 
 		'isCollective': lambda x: x in ('Transactions', 'TransactionItems', 'Shipments'),
 		'isCollected': lambda x: x in ('Transaction', 'TransactionItem', 'Shipment')}
 			
 	return rawIterator(XMLTransactionLookup, argv, 'Transactions', plugins)
+	
 
 def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None):
+	'''DOM representation of TransactionLookup in AWS'''
+
 	Operation = "TransactionLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
+
 
 
 if __name__ == "__main__" :
