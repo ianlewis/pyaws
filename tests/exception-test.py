@@ -22,7 +22,7 @@ class ExceptionsTest( unittest.TestCase ):
 		self.assertRaises( ecs.BadLocale, ecs.setLocale, "zh" )
 
 	def testVersion(self):
-		self.assertEqual(ecs.getVersion, "2007-02-22")
+		self.assertEqual(ecs.getVersion(), "2007-02-22")
 
 
 
