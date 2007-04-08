@@ -47,11 +47,11 @@ class QueryTest(unittest.TestCase):
 		book = books[0]
 		self.assertNotEqual(book, None)
 
-		self.assertEqual(book.ASIN, u'0596009259')
-		self.assertEqual(book.Title, u'Programming Python')
-		self.assertEqual(book.Manufacturer, u"O'Reilly Media, Inc.")
-		self.assertEqual(book.ProductGroup, u'Book')
-		self.assertEqual(book.Author, u'Mark Lutz')
+		self.assertEqual(book.ASIN, '0596009259')
+		self.assertEqual(book.Title, 'Programming Python')
+		self.assertEqual(book.Manufacturer, "O'Reilly Media, Inc.")
+		self.assertEqual(book.ProductGroup, 'Book')
+		self.assertEqual(book.Author, 'Mark Lutz')
 
 
 	def testItemSearch(self):
@@ -141,7 +141,7 @@ class SellerTest(unittest.TestCase):
 	def testSellerLookup(self):
 		# TODO: We need another SellerId here
 		sellers = ecs.SellerLookup(['A3ENSIQ3ZA4FFN'])
-		self.assertEqual(sellers[0].Nickname, u'abebooks')
+		self.assertEqual(sellers[0].Nickname, 'abebooks')
 
 class CustomerTest(unittest.TestCase):
 	def setUp(self):
@@ -158,13 +158,31 @@ class BrowseNodeLookupTest(unittest.TestCase):
 	def testBrowserNodeLookup(self):
 		bnl = ecs.BrowseNodeLookup('1065852')
 		self.assertEqual(len(bnl), 1)
-		self.assertEqual(bnl[0].Name, u'Plasma TVs')
+		self.assertEqual(bnl[0].Name, 'Plasma TVs')
 		children = bnl[0].Children
 		self.assertEqual(len(children), 2)
 
-		self.assertEqual(children[0].BrowseNodeId, u'13005341')
-		self.assertEqual(children[1].BrowseNodeId, u'11091111')
+		self.assertEqual(children[0].BrowseNodeId, '13005341')
+		self.assertEqual(children[1].BrowseNodeId, '11091111')
 
+class HelpTest(unittest.TestCase):
+	def setUp(self):
+		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+
+	def testHelp(self):
+		el = ecs.Help(HelpType="Operation", About="CartAdd")
+		reference = {'AvailableParameters': ['AWSAccessKeyId', 'ContentType', 'LinkCode', 'Marketplace', 'MarketplaceDomain', 'MergeCart', 'Style', 'Validate', 'Version', 'XMLEscaping'],
+			'AvailableResponseGroups': ['Request', 'Cart', 'CartSimilarities', 'CartTopSellers', 'CartNewReleases'], 
+			'RequiredParameters': ['AssociateTag', 'CartId', 'HMAC', 'Items'], 
+			'DefaultResponseGroups': ['Request', 'Cart'] }
+		
+		for x in ('AvailableParameters', 'AvailableResponseGroups', 
+			'RequiredParameters', 'DefaultResponseGroups'):
+			self.assertEqual(getattr(el.OperationInformation,x), reference[x])
+				
+
+
+		
 
 if __name__ == "__main__" :
 	unittest.main()

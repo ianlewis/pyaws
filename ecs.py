@@ -166,8 +166,12 @@ def query(url):
 	
 	return dom
 
+def rawObject(XMLSearch, arguments, kwItem, plugins=None):
+	dom = XMLSearch(** arguments)
+	item = unmarshal(dom.getElementsByTagName(kwItem).item(0), plugins) 
+	return item
 
-def rawIterator(XMLSearch, arguments, plugins, kwItems, kwItem):
+def rawIterator(XMLSearch, arguments, plugins, kwItems):
 	dom = XMLSearch(** arguments)
 	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
 	return items
@@ -300,7 +304,7 @@ def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=Non
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Items',
 		'isCollected': lambda x: x == 'Item'}
-	return rawIterator(XMLSimilarityLookup, argv, plugins, 'Items' , 'Item')
+	return rawIterator(XMLSimilarityLookup, argv, plugins, 'Items')
 
 def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	Operation = "SimilarityLookup"
@@ -437,7 +441,7 @@ def SellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Sellers',
 		'isCollected': lambda x: x == 'Seller'}
-	return rawIterator(XMLSellerLookup, argv, plugins, 'Sellers', 'Seller')
+	return rawIterator(XMLSellerLookup, argv, plugins, 'Sellers')
 
 
 def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
@@ -454,7 +458,7 @@ def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=N
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x in ('Customers', 'CustomerReviews'),
 		'isCollected': lambda x: x in ('Customer', 'Review')}
-	return rawIterator(XMLCustomerContentSearch, argv, plugins, 'Customers', 'Customer')
+	return rawIterator(XMLCustomerContentSearch, argv, plugins, 'Customers')
 
 def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CustomerContentSearch"
@@ -471,7 +475,7 @@ def CustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAcces
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Customers',
 		'isCollected': lambda x: x == 'Customer'}
-	return rawIterator(XMLCustomerContentLookup, argv, plugins, 'Customers', 'Customer')
+	return rawIterator(XMLCustomerContentLookup, argv, plugins, 'Customers')
 
 def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CustomerContentLookup"
@@ -489,10 +493,10 @@ def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 
 def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x in ['Request'],
+	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Children',
 		'isCollected': lambda x: x == 'BrowseNode'}
-	return rawIterator(XMLBrowseNodeLookup, argv, plugins, 'BrowseNodes', 'BrowseNode')
+	return rawIterator(XMLBrowseNodeLookup, argv, plugins, 'BrowseNodes')
 
 # Help
 
@@ -504,22 +508,16 @@ def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 
 def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x in ['Request'],
-		'isCollective': lambda x: x == 'Children',
-		'isCollected': lambda x: x == 'BrowseNode'}
-	return rawIterator(XMLHelp, argv, plugins, 'BrowseNodes', 'BrowseNode')
-
-# Help
-
-
-if __name__ == "__main__" :
-	setLicenseKey("YOUR-LICENSE-HERE")
-	el = BrowseNodeLookup("1065852")
-	import pdb
+	plugins = {'isBypassed': lambda x: x == 'Request', 
+		'isCollective': lambda x: x in ('RequiredParameters', 
+			'AvailableParameters', 'DefaultResponseGroups',
+			'AvailableResponseGroups'),
+		'isCollected': lambda x: x in ('Parameter', 'ResponseGroup') }
+	return rawObject(XMLHelp, argv, 'Information', plugins)
 
 
 if __name__ == "__main__" :
-	setLicenseKey("YOUR-LICENSE-HERE")
-	el = BrowseNodeLookup("1065852")
+	setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	el = Help(HelpType="Operation", About="CartAdd")
 	import pdb
 	pdb.set_trace()
