@@ -184,7 +184,7 @@ class wrappedIterator(list):
 class pagedIterator:
 	'''Return a page-based iterator'''
 
-	def __init__(self, XMLSearch, arguments, plugins, kwPage, kwItems, kwItem):
+	def __init__(self, XMLSearch, arguments, kwPage, kwItems, plugins=None):
 		"""XMLSearch: the callback function that returns the DOM
 		arguments: the arguments for XMLSearch
 		kwPage, kwItems: page, items, item keyword to organize the object
@@ -288,7 +288,7 @@ def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes', 
 		'isCollective': lambda x: x == 'Items', 
 		'isCollected': lambda x: x == 'Item'}
-	return pagedIterator(XMLItemLookup, argv, plugins, 'OfferPage', 'Items', 'Item')
+	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', plugins)
 	
 def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	Operation = "ItemLookup"
@@ -301,7 +301,7 @@ def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, P
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Items', 
 		'isCollected': lambda x: x == 'Item'}
-	return pagedIterator(XMLItemSearch, argv, plugins, "ItemPage", 'Items', 'Item')
+	return pagedIterator(XMLItemSearch, argv, "ItemPage", 'Items', plugins)
 
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	Operation = "ItemSearch"
@@ -328,7 +328,7 @@ def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None,
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Lists', 
 		'isCollected': lambda x: x == 'List'}
-	return pagedIterator(XMLListLookup, argv, plugins, 'ProductPage', 'Lists' , 'List')
+	return pagedIterator(XMLListLookup, argv, 'ProductPage', 'Lists', plugins)
 
 def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	Operation = "ListLookup"
@@ -341,7 +341,7 @@ def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, C
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Lists', 
 		'isCollected': lambda x: x == 'List'}
-	return pagedIterator(XMLListSearch, argv, plugins, 'ListPage', 'Lists', 'List')
+	return pagedIterator(XMLListSearch, argv, 'ListPage', 'Lists', plugins)
 
 def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "ListSearch"
@@ -460,7 +460,6 @@ def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 	SellerId = ",".join(Sellers)
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	del argv['Sellers']
-
 	return query(buildRequest(argv))
 
 
@@ -489,14 +488,13 @@ def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Offer
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'SellerListings', 
 		'isCollected': lambda x: x == 'SellerListing'}
-	return pagedIterator(XMLSellerListingSearch, argv, plugins, "ListingPage", "SellerListings", '')
+	return pagedIterator(XMLSellerListingSearch, argv, "ListingPage", "SellerListings", plugins)
 
 
 def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "SellerListingSearch"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-
 	return query(buildRequest(argv))
 
 
