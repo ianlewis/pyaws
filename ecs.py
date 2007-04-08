@@ -31,7 +31,7 @@ __license__ = "Python Software Foundation"
 LICENSE_KEY = None;
 HTTP_PROXY = None
 LOCALE = "us"
-VERSION = "2005-10-05"
+VERSION = "2007-02-22"
 
 
 __supportedLocales = {
@@ -92,7 +92,7 @@ def setLocale(locale):
 	global LOCALE
 	if not __supportedLocales.has_key(locale):
 		raise BadLocale, ("Unsupported locale. Locale must be one of: %s" %
-			string.join(__supportedLocales, ", "))
+			', '.join([x for x in __supportedLocales.keys() if x]))
 	LOCALE = locale
 
 
@@ -171,7 +171,7 @@ def rawObject(XMLSearch, arguments, kwItem, plugins=None):
 	item = unmarshal(dom.getElementsByTagName(kwItem).item(0), plugins) 
 	return item
 
-def rawIterator(XMLSearch, arguments, plugins, kwItems):
+def rawIterator(XMLSearch, arguments, kwItems, plugins=None):
 	dom = XMLSearch(** arguments)
 	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
 	return items
@@ -304,7 +304,7 @@ def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=Non
 	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
 		'isCollective': lambda x: x == 'Items',
 		'isCollected': lambda x: x == 'Item'}
-	return rawIterator(XMLSimilarityLookup, argv, plugins, 'Items')
+	return rawIterator(XMLSimilarityLookup, argv, 'Items', plugins)
 
 def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	Operation = "SimilarityLookup"
@@ -441,7 +441,7 @@ def SellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Sellers',
 		'isCollected': lambda x: x == 'Seller'}
-	return rawIterator(XMLSellerLookup, argv, plugins, 'Sellers')
+	return rawIterator(XMLSellerLookup, argv, 'Sellers', plugins)
 
 
 def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
@@ -458,7 +458,7 @@ def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=N
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x in ('Customers', 'CustomerReviews'),
 		'isCollected': lambda x: x in ('Customer', 'Review')}
-	return rawIterator(XMLCustomerContentSearch, argv, plugins, 'Customers')
+	return rawIterator(XMLCustomerContentSearch, argv, 'Customers', plugins)
 
 def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CustomerContentSearch"
@@ -475,7 +475,7 @@ def CustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAcces
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Customers',
 		'isCollected': lambda x: x == 'Customer'}
-	return rawIterator(XMLCustomerContentLookup, argv, plugins, 'Customers')
+	return rawIterator(XMLCustomerContentLookup, argv, 'Customers', plugins)
 
 def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CustomerContentLookup"
@@ -496,7 +496,7 @@ def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	plugins = {'isBypassed': lambda x: x == 'Request',
 		'isCollective': lambda x: x == 'Children',
 		'isCollected': lambda x: x == 'BrowseNode'}
-	return rawIterator(XMLBrowseNodeLookup, argv, plugins, 'BrowseNodes')
+	return rawIterator(XMLBrowseNodeLookup, argv, 'BrowseNodes', plugins)
 
 # Help
 
