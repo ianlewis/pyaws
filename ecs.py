@@ -187,7 +187,7 @@ class pagedIterator:
 	def __init__(self, XMLSearch, arguments, plugins, kwPage, kwItems, kwItem):
 		"""XMLSearch: the callback function that returns the DOM
 		arguments: the arguments for XMLSearch
-		kwPage, kwItems, kwItem: page, items, item keyword to organize the object
+		kwPage, kwItems: page, items, item keyword to organize the object
 		"""
 		self.__search = XMLSearch 
 		self.__arguments = arguments 
@@ -237,7 +237,17 @@ class pagedIterator:
 
 def unmarshal(element, plugins=None, rc=None):
 	"""this core function populate the object using the DOM, 
-	which is inspired by Mark Pilgrim (f8dy@diveintomark.org)"""
+	which is inspired by Mark Pilgrim (f8dy@diveintomark.org)
+	Some enhancement:
+		if plugins['isBypassed'] is true:
+			this elment is ignored
+		if plugins['isPivoted'] is true:
+			this children of this elment is moved to grandparents
+		if plugins['isCollective'] is true:
+			this elment is mapped to []
+		if plugins['isCollected'] is true:
+			this children of elment is appended to grandparent
+	"""
 
 	if(rc == None):
 		rc = Bag()
@@ -453,6 +463,43 @@ def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 
 	return query(buildRequest(argv))
 
+
+def SellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSAccessKeyId=None):
+	'''Notice: although the repsonse includes TotalPage, TotalResults, 
+	there is no ListingPage in the request, so pagedIterator does not work
+	here, we have to use rawIterator, hope Amazaon would fix this 
+	inconsistance soon'''
+	'''Notice: the parsing is the same as SellerListingSearch'''
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	plugins = {'isBypassed': lambda x: x == 'Request',
+		'isCollective': lambda x: x == 'SellerListings', 
+		'isCollected': lambda x: x == 'SellerListing'}
+	return rawIterator(XMLSellerListingLookup, argv, "SellerListings", plugins)
+
+def XMLSellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "SellerListingLookup"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	return query(buildRequest(argv))
+
+
+def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None):
+	'''Notice: the parsing is the same as SellerListingLookup'''
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	plugins = {'isBypassed': lambda x: x == 'Request',
+		'isCollective': lambda x: x == 'SellerListings', 
+		'isCollected': lambda x: x == 'SellerListing'}
+	return pagedIterator(XMLSellerListingSearch, argv, plugins, "ListingPage", "SellerListings", '')
+
+
+def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "SellerListingSearch"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+
+	return query(buildRequest(argv))
+
+
 def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
@@ -485,12 +532,6 @@ def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAc
 
 # BrowseNode
 
-def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
-	Operation = "BrowseNodeLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
-
 def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
@@ -498,13 +539,14 @@ def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 		'isCollected': lambda x: x == 'BrowseNode'}
 	return rawIterator(XMLBrowseNodeLookup, argv, 'BrowseNodes', plugins)
 
-# Help
-
-def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
-	Operation = "Help"
+def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "BrowseNodeLookup"
 	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
+
+
+# Help
 
 def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -515,9 +557,32 @@ def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 		'isCollected': lambda x: x in ('Parameter', 'ResponseGroup') }
 	return rawObject(XMLHelp, argv, 'Information', plugins)
 
+def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "Help"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	return query(buildRequest(argv))
+
+
+# Transaction
+
+def TransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	plugins = {'isBypassed': lambda x: x == 'Request', 
+		'isCollective': lambda x: x in ('Transactions', 'TransactionItems', 'Shipments'),
+		'isCollected': lambda x: x in ('Transaction', 'TransactionItem', 'Shipment')}
+			
+	return rawIterator(XMLTransactionLookup, argv, 'Transactions', plugins)
+
+def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "TransactionLookup"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	return query(buildRequest(argv))
+
 
 if __name__ == "__main__" :
-	setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
-	el = Help(HelpType="Operation", About="CartAdd")
-	import pdb
-	pdb.set_trace()
+	setLicenseKey("YOUR-LICENSE-HERE");
+	sll = SellerListingLookup("A3ENSIQ3ZA4FFN", "1106K206331")
+	print dir(sll[0])
+	

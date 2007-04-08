@@ -143,6 +143,22 @@ class SellerTest(unittest.TestCase):
 		sellers = ecs.SellerLookup(['A3ENSIQ3ZA4FFN'])
 		self.assertEqual(sellers[0].Nickname, 'abebooks')
 
+	def testSellerListingSearch(self):
+		sl = ecs.SellerListingSearch('A3ENSIQ3ZA4FFN', Title='Paperback')
+		self.assert_(len(sl) > 100, "We are expecting more than 100 results returned")
+		self.assertNotEqual(sl[99], None)
+
+	def testSellerListingLookup(self):
+		sellerId = 'A3ENSIQ3ZA4FFN'
+		sl = ecs.SellerListingSearch(sellerId, Title='Paperback')
+		id = sl[0].ListingId
+		sll = ecs.SellerListingLookup(sellerId, id)
+		self.assert_(len(sll) > 0)
+
+		for x in ['ASIN', 'Condition', 'EndDate', 'ExchangeId', 'ListingId', 'Price', 'Quantity', 'Seller', 'StartDate', 'Status', 'SubCondition', 'Title']:
+			self.assertNotEqual(getattr(sll[0], x), None)
+		
+
 class CustomerTest(unittest.TestCase):
 	def setUp(self):
 		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
@@ -181,8 +197,26 @@ class HelpTest(unittest.TestCase):
 			self.assertEqual(getattr(el.OperationInformation,x), reference[x])
 				
 
+class TransactionLookpuTest(unittest.TestCase):
+	def setUp(self):
+		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
+	def testTransactionLookup(self):
+		el = ecs.TransactionLookup("104-1867480-8536729")
+		self.assertEqual(len(el), 1)
+		self.assertEqual(el[0].SellerId, "ATVPDKIKX0DER")
+		self.assertEqual(el[0].TransactionDateEpoch, "1087249913")
+
+		self.assertEqual(el[0].Totals.Total.Amount, "3090")
+		self.assertEqual(el[0].Totals.Subtotal.Amount, "3157")
+		self.assertEqual(el[0].Totals.Tax.Amount, "249")
+		self.assertEqual(el[0].Totals.ShippingCharge.Amount, "498")
+
+		self.assert_(len(el[0].TransactionItems), 1)
+		self.assertEqual(el[0].TransactionItems[0].TotalPrice.Amount, "2037")
 		
+		self.assertEqual(el[0].Shipments[0].DeliveryMethod, "Mail")
+
 
 if __name__ == "__main__" :
 	unittest.main()
