@@ -23,8 +23,8 @@ import os, urllib, string, inspect
 from xml.dom import minidom
 
 __author__ = "Kun Xi < kunxi@kunxi.org >"
-__version__ = "0.0.1"
-__license__ = "GPL"
+__version__ = "0.1.1"
+__license__ = "Python Software Foundation"
 
 
 # Package-wide variables:
@@ -479,8 +479,47 @@ def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAc
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
+# BrowseNode
+
+def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "BrowseNodeLookup"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	return query(buildRequest(argv))
+
+def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	plugins = {'isBypassed': lambda x: x in ['Request'],
+		'isCollective': lambda x: x == 'Children',
+		'isCollected': lambda x: x == 'BrowseNode'}
+	return rawIterator(XMLBrowseNodeLookup, argv, plugins, 'BrowseNodes', 'BrowseNode')
+
+# Help
+
+def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
+	Operation = "Help"
+	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	return query(buildRequest(argv))
+
+def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
+	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	plugins = {'isBypassed': lambda x: x in ['Request'],
+		'isCollective': lambda x: x == 'Children',
+		'isCollected': lambda x: x == 'BrowseNode'}
+	return rawIterator(XMLHelp, argv, plugins, 'BrowseNodes', 'BrowseNode')
+
+# Help
+
 
 if __name__ == "__main__" :
 	setLicenseKey("YOUR-LICENSE-HERE")
-	cs = CustomerContentLookup('A2KEKKJ9CAC2KC', ResponseGroup='CustomerReviews')
+	el = BrowseNodeLookup("1065852")
+	import pdb
 
+
+if __name__ == "__main__" :
+	setLicenseKey("YOUR-LICENSE-HERE")
+	el = BrowseNodeLookup("1065852")
+	import pdb
+	pdb.set_trace()

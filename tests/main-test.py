@@ -135,15 +135,35 @@ class CartTest( unittest.TestCase ):
 		self.failUnless(hasattr(cart, 'SavedForLaterItems'))
 
 class SellerTest(unittest.TestCase):
+	def setUp(self):
+		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+
 	def testSellerLookup(self):
 		# TODO: We need another SellerId here
 		sellers = ecs.SellerLookup(['A3ENSIQ3ZA4FFN'])
 		self.assertEqual(sellers[0].Nickname, u'abebooks')
 
 class CustomerTest(unittest.TestCase):
+	def setUp(self):
+		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+
 	def testCustomerContentSearch(self):
 		cs = ecs.CustomerContentSearch('Sam', None, 20)
 		self.assertEqual(len(cs), 20)
+
+class BrowseNodeLookupTest(unittest.TestCase):
+	def setUp(self):
+		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+
+	def testBrowserNodeLookup(self):
+		bnl = ecs.BrowseNodeLookup('1065852')
+		self.assertEqual(len(bnl), 1)
+		self.assertEqual(bnl[0].Name, u'Plasma TVs')
+		children = bnl[0].Children
+		self.assertEqual(len(children), 2)
+
+		self.assertEqual(children[0].BrowseNodeId, u'13005341')
+		self.assertEqual(children[1].BrowseNodeId, u'11091111')
 
 
 if __name__ == "__main__" :
