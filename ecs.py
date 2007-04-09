@@ -144,6 +144,7 @@ def buildRequest(argv):
 	all key, value pairs in argv are quoted."""
 
 	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&"
+	argv['AWSAccessKeyId'] = argv['AWSAccessKeyId'] or LICENSE_KEY
 	return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
 
 
@@ -324,7 +325,6 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 	'''DOM representation of ItemLookup in ECS'''
 
 	Operation = "ItemLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -343,7 +343,6 @@ def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None
 	'''DOM representation of ItemSearch in ECS'''
 
 	Operation = "ItemSearch"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -362,7 +361,6 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 	'''DOM representation of SimilarityLookup in ECS'''
 
 	Operation = "SimilarityLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -383,7 +381,6 @@ def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=No
 	'''DOM representation of ListLookup in ECS'''
 
 	Operation = "ListLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -402,7 +399,6 @@ def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None
 	'''DOM representation of ListSearch in ECS'''
 
 	Operation = "ListSearch"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -419,7 +415,6 @@ def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of CartCreate in ECS'''
 
 	Operation = "CartCreate"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	for x in ('Items', 'Quantities'):
 		del argv[x]
@@ -439,7 +434,6 @@ def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None)
 	'''DOM representation of CartAdd in ECS'''
 
 	Operation = "CartAdd"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -460,7 +454,6 @@ def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of CartGet in ECS'''
 
 	Operation = "CartGet"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -478,7 +471,6 @@ def CartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
 def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of CartModify in ECS'''
 	Operation = "CartModify"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -499,7 +491,6 @@ def XMLCartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of CartClear in ECS'''
 
 	Operation = "CartClear"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -544,7 +535,6 @@ def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of SellerLookup in AWS'''
 
 	Operation = "SellerLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	SellerId = ",".join(Sellers)
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	del argv['Sellers']
@@ -569,7 +559,6 @@ def XMLSellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, A
 	'''DOM representation of SellerListingLookup in AWS'''
 
 	Operation = "SellerListingLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -588,7 +577,6 @@ def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Of
 	'''DOM representation of SellerListingSearch in AWS'''
 
 	Operation = "SellerListingSearch"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -607,7 +595,6 @@ def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGrou
 	'''DOM representation of CustomerContentSearch in AWS'''
 
 	Operation = "CustomerContentSearch"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	for x in ('Name', 'Email'):
 		if not argv[x]:
@@ -629,7 +616,6 @@ def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAc
 	'''DOM representation of CustomerContentLookup in AWS'''
 
 	Operation = "CustomerContentLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -649,7 +635,6 @@ def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of BrowseNodeLookup in AWS'''
 	
 	Operation = "BrowseNodeLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -671,7 +656,6 @@ def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of Help in AWS'''
 
 	Operation = "Help"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
@@ -692,7 +676,6 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 	'''DOM representation of TransactionLookup in AWS'''
 
 	Operation = "TransactionLookup"
-	AWSAccessKeyId = AWSAccessKeyId or LICENSE_KEY
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	return query(buildRequest(argv))
 
