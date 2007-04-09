@@ -34,13 +34,13 @@ LOCALE = "us"
 VERSION = "2007-02-22"
 
 __supportedLocales = {
-		None : "webservices.amazon.com",  
-		"us" : "webservices.amazon.com",   
-		"uk" : "webservices.amazon.co.uk",
-		"de" : "webservices.amazon.de",
-		"jp" : "webservices.amazon.co.jp",
-		"fr" : "webservices.amazon.fr",
-		"ca" : "webservices.amazon.ca"
+		None : "ecs.amazonaws.com",  
+		"us" : "ecs.amazonaws.com",  
+		"uk" : "ecs.amazonaws.co.uk", 
+		"de" : "ecs.amazonaws.co.de", 
+		"jp" : "ecs.amazonaws.co.jp", 
+		"fr" : "ecs.amazonaws.co.fr", 
+		"ca" : "ecs.amazonaws.co.ca", 
 	}
 
 __licenseKeys = (
