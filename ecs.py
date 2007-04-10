@@ -86,7 +86,7 @@ class XSLTTransformationError(AWSException): pass
 class Bag : 
 	'''Wrapper class for DOM nodes'''
 	def __repr__(self):
-		return self.__dict__.__repr__()
+		return '<Bag instance: ' + self.__dict__.__repr__() + '>'
 
 
 
@@ -681,9 +681,9 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 
 if __name__ == "__main__" :
-	setLicenseKey("YOUR-LICENSE-HERE");
+	setLicenseKey("YOUR-LICENSE-HERE")
 	sll = SellerListingLookup("A3ENSIQ3ZA4FFN", "1106K206331")
 	import pdb
 	pdb.set_trace()
 	print sll[0]
-	
+
