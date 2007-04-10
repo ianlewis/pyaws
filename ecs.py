@@ -126,7 +126,7 @@ def setLicenseKey(license_key=None):
 def getLicenseKey():
 	"""get license key
 
-	if no license key is specified, BadLocale is raised."""
+	if no license key is specified,  NoLicenseKey is raised."""
 
 	if not LICENSE_KEY:
 		raise NoLicenseKey, ("Please get the license key from  http://www.amazon.com/webservices")
@@ -144,7 +144,8 @@ def buildRequest(argv):
 	all key, value pairs in argv are quoted."""
 
 	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&"
-	argv['AWSAccessKeyId'] = argv['AWSAccessKeyId'] or LICENSE_KEY
+	if not argv['AWSAccessKeyId']:
+		argv['AWSAccessKeyId'] = getLicenseKey()
 	return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
 
 
@@ -202,7 +203,7 @@ class wrappedIterator(list):
 class pagedIterator:
 	'''Return a page-based iterator'''
 
-	def __init__(self, XMLSearch, arguments, kwPage, kwItems, plugins=None):
+	def __init__(self, XMLSearch, arguments, kwPage, kwItems, plugins=None, pageSize=10):
 		"""XMLSearch: the callback function that returns the DOM
 		arguments: the arguments for XMLSearch
 		kwPage, kwItems: Tag name of Page, Items to organize the object
@@ -214,6 +215,7 @@ class pagedIterator:
 		self.__plugins = plugins
 		self.__page = arguments[kwPage] or 1
 		self.__index = 0
+		self.__pageSize = pageSize
 		dom = self.__search(** self.__arguments)
 		self.__items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
 		try:
@@ -235,16 +237,12 @@ class pagedIterator:
 			raise StopIteration
 
 	def __getitem__(self, key):
-		try:
-			num = int(key)
-		except TypeError, e:
-			raise e
-
+		num = int(key)
 		if num >= self.__len:
 			raise IndexError
 
-		page = num / 10 + 1
-		index = num % 10
+		page = num / self.__pageSize + 1
+		index = num % self.__pageSize
 		if page != self.__page:
 			self.__arguments[self.__keywords['Page']] = page
 			dom = self.__search(** self.__arguments)
