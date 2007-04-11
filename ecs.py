@@ -31,7 +31,7 @@ __license__ = "Python Software Foundation"
 LICENSE_KEY = None;
 HTTP_PROXY = None
 LOCALE = "us"
-VERSION = "2007-02-22"
+VERSION = "2007-04-04"
 
 __supportedLocales = {
 		None : "ecs.amazonaws.com",  
@@ -144,7 +144,7 @@ def buildRequest(argv):
 	
 	all key, value pairs in argv are quoted."""
 
-	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&"
+	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&" + ('Version=%s&' % VERSION)
 	if not argv['AWSAccessKeyId']:
 		argv['AWSAccessKeyId'] = getLicenseKey()
 	return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
@@ -625,7 +625,7 @@ def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
-		'isCollective': lambda x: x == 'Children',
+		'isCollective': lambda x: x in ('Children', 'Ancestors'),
 		'isCollected': lambda x: x == 'BrowseNode'}
 	return rawIterator(XMLBrowseNodeLookup, argv, 'BrowseNodes', plugins)
 
@@ -681,9 +681,7 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 
 if __name__ == "__main__" :
-	setLicenseKey("YOUR-LICENSE-HERE")
-	sll = SellerListingLookup("A3ENSIQ3ZA4FFN", "1106K206331")
-	import pdb
-	pdb.set_trace()
-	print sll[0]
+	setLicenseKey("YOUR-LICENSE-HERE");
+	dom = XMLBrowseNodeLookup('1065852')
+	print dom.toprettyxml()
 
