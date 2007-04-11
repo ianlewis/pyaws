@@ -130,7 +130,7 @@ def getLicenseKey():
 	if no license key is specified,  NoLicenseKey is raised."""
 
 	if not LICENSE_KEY:
-		raise NoLicenseKey, ("Please get the license key from  http://www.amazon.com/webservices")
+		setLicenseKey()
 	return LICENSE_KEY
 	
 
