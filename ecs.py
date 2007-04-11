@@ -520,7 +520,7 @@ def __cartOperation(XMLSearch, arguments):
 
 
 # Seller Operation
-def SellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
+def SellerLookup(Sellers, FeedbackPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	'''SellerLookup in AWS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -530,7 +530,7 @@ def SellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
 	return rawIterator(XMLSellerLookup, argv, 'Sellers', plugins)
 
 
-def XMLSellerLookup(Sellers, ResponseGroup=None, AWSAccessKeyId=None):
+def XMLSellerLookup(Sellers, FeedbackPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of SellerLookup in AWS'''
 
 	Operation = "SellerLookup"
