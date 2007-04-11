@@ -310,7 +310,7 @@ def unmarshal(element, plugins=None, rc=None):
 	
 # User interfaces
 
-def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
+def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	'''ItemLookup in ECS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -320,7 +320,7 @@ def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition
 	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', plugins)
 
 	
-def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
+def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	'''DOM representation of ItemLookup in ECS'''
 
 	Operation = "ItemLookup"
