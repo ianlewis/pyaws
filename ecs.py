@@ -32,6 +32,7 @@ LICENSE_KEY = None;
 HTTP_PROXY = None
 LOCALE = "us"
 VERSION = "2007-04-04"
+OPTIONS = {}
 
 __supportedLocales = {
 		None : "ecs.amazonaws.com",  
@@ -50,12 +51,14 @@ __licenseKeys = (
    )
 
 
+
 class AWSException(Exception) : 
 	'''Base class for all AWS exceptions'''
 	pass
 
 class NoLicenseKey(AWSException) : pass
 class BadLocale(AWSException) : pass
+class BadOption(AWSException): pass
 # Runtime exception
 class ExactParameterRequirement(AWSException): pass
 class ExceededMaximumParameterValues(AWSException): pass
@@ -113,7 +116,7 @@ def setLicenseKey(license_key=None):
 
 	license key can come from any number of locations;
 	see module docs for search order.
-	if no license key is specified, BadLocale is raised."""
+	if no license key is specified, NoLicenseKey is raised."""
 
 	global LICENSE_KEY
 	for get in __licenseKeys:
@@ -132,11 +135,27 @@ def getLicenseKey():
 	if not LICENSE_KEY:
 		setLicenseKey()
 	return LICENSE_KEY
-	
+
 
 def getVersion():
-	"""get version"""
+	'''get the version of ECS specification'''
 	return VERSION
+	
+
+def setOptions(options):
+	'''set the general optional parameter
+	available options are:
+		AssociateTag, MerchantID, Version, Validate'''
+	
+	if set(options.keys()).issubset( set(['AssociateTag', 'MerchantID', 'Validate']) ):
+		global OPTIONS
+		OPTIONS.update(options)
+	else:
+		raise BadOption, ('Unsupported option')
+
+		
+def getOptions():
+	return OPTIONS 
 
 
 def buildRequest(argv):
@@ -144,9 +163,10 @@ def buildRequest(argv):
 	
 	all key, value pairs in argv are quoted."""
 
-	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&" + ('Version=%s&' % VERSION)
+	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&" + 'Version=%s&' % VERSION
 	if not argv['AWSAccessKeyId']:
 		argv['AWSAccessKeyId'] = getLicenseKey()
+	argv.update(getOptions())
 	return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
 
 

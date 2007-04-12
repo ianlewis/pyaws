@@ -22,8 +22,10 @@ class ExceptionsTest( unittest.TestCase ):
 		self.assertRaises( ecs.BadLocale, ecs.setLocale, "zh" )
 
 	def testVersion(self):
-		self.assertEqual(ecs.getVersion(), "2007-02-22")
+		self.assertEqual(ecs.getVersion(), "2007-04-04")
 
+	def testOptionPut(self):
+		self.assertRaises( ecs.BadOption, ecs.setOptions, {'foo': 3} )
 
 
 	def testExactParameterRequirement(self):
