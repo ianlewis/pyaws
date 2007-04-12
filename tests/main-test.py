@@ -218,6 +218,18 @@ class TransactionLookpuTest(unittest.TestCase):
 		self.assertEqual(el[0].Shipments[0].DeliveryMethod, "Mail")
 
 
+class SocketTest(unittest.TestCase):
+	def setUp(self):
+		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+
+	def testTimeout(self):
+		import socket
+		dto = socket.getdefaulttimeout()
+		socket.setdefaulttimeout(0.05)
+		self.assertRaises( IOError, ecs.TransactionLookup, "104-1867480-8536729")
+		socket.setdefaulttimeout(dto)
+
+
 if __name__ == "__main__" :
 	unittest.main()
 

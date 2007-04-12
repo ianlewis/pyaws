@@ -29,7 +29,6 @@ __license__ = "Python Software Foundation"
 """Package-wide variables:
 """
 LICENSE_KEY = None;
-HTTP_PROXY = None
 LOCALE = "us"
 VERSION = "2007-04-04"
 OPTIONS = {}
@@ -49,7 +48,6 @@ __licenseKeys = (
 	(lambda key: LICENSE_KEY), 
 	(lambda key: os.environ.get('AWS_LICENSE_KEY', None))
    )
-
 
 
 class AWSException(Exception) : 
@@ -187,7 +185,7 @@ def query(url):
 	"""Send the query url and return the DOM
 	
 	Exception is raised if there is errors"""
-	u = urllib.FancyURLopener(HTTP_PROXY)
+	u = urllib.FancyURLopener()
 	usock = u.open(url)
 	dom = minidom.parse(usock)
 	usock.close()

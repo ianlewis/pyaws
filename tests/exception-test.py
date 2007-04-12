@@ -27,6 +27,7 @@ class ExceptionsTest( unittest.TestCase ):
 	def testOptionPut(self):
 		self.assertRaises( ecs.BadOption, ecs.setOptions, {'foo': 3} )
 
+
 	def testExactParameterRequirement(self):
 		pass
 
