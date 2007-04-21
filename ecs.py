@@ -1,37 +1,139 @@
-"""Python wrapper for AWS E-Commerce Serive APIs.
+# Author: Kun Xi <kunxi@kunxi.org>
+# License: Python Software Foundation License
 
-Based upon pyamazon (http://www.josephson.org/projects/pyamazon/) with 
-efforts to meet the latest AWS specification.
-
-The Amazon's web APIs specication is described here:
-http://www.amazon.com/webservices
-
-You need a Amazon-provided license key to use these services.
-Follow the link above to get one.  These functions will look in
-several places (in this order) for the license key:
-	- the "license_key" argument of each function
-	- the module-level LICENSE_KEY variable (call setLicense once to set it)
-	- an environment variable called AMAZON_LICENSE_KEY
-	- foo would return the python object, XMLfoo returns the DOM object
-
-License: Python Software Foundation License
 """
+A Python wrapper to access Amazon Web Service(AWS) E-Commerce Serive APIs,
+based upon pyamazon (http://www.josephson.org/projects/pyamazon/), enhanced
+to meet the latest AWS specification(http://www.amazon.com/webservices).
+
+This module defines the following classes:
+
+- `Bag`, a generic container for the python objects
+- `listIterator`, a derived class of list
+- `pagedIterator`, a page-based iterator using lazy evaluation
+
+Exception classes:
+
+- `AWSException`
+- `NoLicenseKey`
+- `BadLocale`
+- `BadOption`
+- `ExactParameterRequirement`
+- `ExceededMaximumParameterValues`
+- `InsufficientParameterValues`
+- `InternalError`
+- `InvalidEnumeratedParameter`
+- `InvalidISO8601Time`
+- `InvalidOperationForMarketplace`
+- `InvalidOperationParameter`
+- `InvalidParameterCombination`
+- `InvalidParameterValue`
+- `InvalidResponseGroup`
+- `InvalidServiceParameter`
+- `InvalidSubscriptionId`
+- `InvalidXSLTAddress`
+- `MaximumParameterRequirement`
+- `MinimumParameterRequirement`
+- `MissingOperationParameter`
+- `MissingParameterCombination`
+- `MissingParameters`
+- `MissingParameterValueCombination`
+- `MissingServiceParameter`
+- `ParameterOutOfRange`
+- `ParameterRepeatedInRequest`
+- `RestrictedParameterValueCombination`
+- `XSLTTransformationError`
+
+Functions:
+
+- `setLocale`
+- `getLocale`
+- `setLicenseKey`
+- `getLicenseKey`
+- `getVersion`
+- `setOptions` 
+- `getOptions`
+- `buildRequest`
+- `buildException`
+- `query`
+- `rawObject`
+- `rawIterator`
+- `unmarshal`
+- `ItemLookup`
+- `XMLItemLookup`
+- `ItemSearch`
+- `XMLItemSearch`
+- `SimilarityLookup`
+- `XMLSimilarityLookup`
+- `ListLookup`
+- `XMLListLookup`
+- `ListSearch`
+- `XMLListSearch`
+- `CartCreate`
+- `XMLCartCreate`
+- `CartAdd`
+- `XMLCartAdd`
+- `CartGet`
+- `XMLCartGet`
+- `CartModify`
+- `XMLCartModify`
+- `CartClear`
+- `XMLCartClear`
+- `SellerLookup`
+- `XMLSellerLookup`
+- `SellerListingLookup`
+- `XMLSellerListingLookup`
+- `SellerListingSearch`
+- `XMLSellerListingSearch`
+- `CustomerContentSearch`
+- `XMLCustomerContentSearch`
+- `CustomerContentLookup`
+- `XMLCustomerContentLookup`
+- `BrowseNodeLookup`
+- `XMLBrowseNodeLookup`
+- `Help`
+- `XMLHelp`
+- `TransactionLookup`
+- `XMLTransactionLookup`
+
+Accroding to the ECS specification, there are two implementation foo and XMLfoo, for example, `ItemLookup` and `XMLItemLookup`. foo returns a Python object, XMLfoo returns the raw XML file.
+
+How To Use This Module
+======================
+(See the individual classes, methods, and attributes for details.)
+
+1. Apply for a Amazon Web Service API key from Amazon Web Service:
+   https://aws-portal.amazon.com/gp/aws/developer/registration/index.html
+
+2. Import it: ``import pyaws.ecs``
+
+3. Setup the license key: ``ecs.setLicenseKey('YOUR-KEY-FROM-AWS')``
+   or you could use the environment variable AMAZON_LICENSE_KEY
+
+   Optional: 
+   a) setup other options, like AssociateTag, MerchantID, Validate
+   b) export the http_proxy environment variable if you want to use proxy
+   c) setup the locale if your locale is not ``us``
+
+4. Send query to the AWS, and manupilate the returned python object.
+"""
+
+__author__ = "Kun Xi < kunxi@kunxi.org >"
+__version__ = "0.2.0"
+__license__ = "Python Software Foundation"
+__docformat__ = 'restructuredtext'
 
 
 import os, urllib, string, inspect
 from xml.dom import minidom
 
-__author__ = "Kun Xi < kunxi@kunxi.org >"
-__version__ = "0.2.0"
-__license__ = "Python Software Foundation"
 
-
-"""Package-wide variables:
-"""
+# Package-wide variables:
 LICENSE_KEY = None;
 LOCALE = "us"
 VERSION = "2007-04-04"
 OPTIONS = {}
+
 
 __supportedLocales = {
 		None : "ecs.amazonaws.com",  
@@ -50,10 +152,104 @@ __licenseKeys = (
    )
 
 
-class AWSException(Exception) : 
-	'''Base class for all AWS exceptions'''
+# Wrapper class for ECS
+class Bag : 
+	"""A generic container for the python objects"""
+	def __repr__(self):
+		return '<Bag instance: ' + self.__dict__.__repr__() + '>'
+
+
+def rawObject(XMLSearch, arguments, kwItem, plugins=None):
+	"""Return simple object from `unmarshal`"""
+	dom = XMLSearch(** arguments)
+	return unmarshal(dom.getElementsByTagName(kwItem).item(0), plugins) 
+
+
+def rawIterator(XMLSearch, arguments, kwItems, plugins=None):
+	"""Return list of objects from `unmarshal`"""
+	dom = XMLSearch(** arguments)
+	return unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, listIterator())
+
+
+class listIterator(list):
+	"""List with extended attributes"""
 	pass
 
+	
+class pagedIterator:
+	"""
+	A page-based iterator using lazy evaluation.
+	In some service, such as ItemSearch, AWS returns the result based on
+	pages, the pagedIterator keeps track of the current page, and send
+	the request only if necessary.
+
+	Bugs: 
+
+	- list slicing is still missing.
+	"""
+
+	def __init__(self, XMLSearch, arguments, kwPage, kwItems, plugins=None, pageSize=10):
+		"""
+		Initialize a `pagedIterator` object.
+		Parameters:
+
+		- `XMLSearch`: a function, the query to get the DOM
+		- `arguments`: a dictionary, `XMLSearch`'s arguments
+		- `kwPage`: a string, tag name of page
+		- `kwItems`: a string, tag name of items
+		- `plugins`: a dictionary, collection of plugged objects
+		- `pageSize`: an integer, the amount of items in the page
+	
+		"""
+		self.__search = XMLSearch 
+		self.__arguments = arguments 
+		self.__keywords ={'Page':kwPage, 'Items':kwItems} 
+		self.__plugins = plugins
+		self.__page = arguments[kwPage] or 1
+		"""Current page"""
+		self.__index = 0
+		"""Current index"""
+		self.__pageSize = pageSize
+
+		dom = self.__search(** self.__arguments)
+		self.__items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, listIterator())
+		"""Cached items"""
+		try:
+			self.__len = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
+		except AttributeError, e:
+			self.__len = len(self.__items)
+
+	def __len__(self):
+		return self.__len
+
+	def __iter__(self):
+		return self
+
+	def next(self):
+		if self.__index < self.__len:
+			self.__index = self.__index + 1
+			return self.__getitem__(self.__index-1)
+		else:
+			raise StopIteration
+
+	def __getitem__(self, key):
+		num = int(key)
+		if num >= self.__len:
+			raise IndexError
+
+		page = num / self.__pageSize + 1
+		index = num % self.__pageSize
+		if page != self.__page:
+			self.__arguments[self.__keywords['Page']] = page
+			dom = self.__search(** self.__arguments)
+			self.__items = unmarshal(dom.getElementsByTagName(self.__keywords['Items']).item(0), self.__plugins, listIterator())
+			self.__page = page
+
+		return self.__items[index]
+
+
+# Exception classes
+class AWSException(Exception) : pass
 class NoLicenseKey(AWSException) : pass
 class BadLocale(AWSException) : pass
 class BadOption(AWSException): pass
@@ -84,18 +280,10 @@ class ParameterRepeatedInRequest(AWSException): pass
 class RestrictedParameterValueCombination(AWSException): pass
 class XSLTTransformationError(AWSException): pass
 
-class Bag : 
-	'''Wrapper class for DOM nodes'''
-	def __repr__(self):
-		return '<Bag instance: ' + self.__dict__.__repr__() + '>'
-
-
 
 # Utilities functions
-
 def setLocale(locale):
-	"""set locale
-	
+	"""Set the locale
 	if unsupported locale is set, BadLocale is raised."""
 	global LOCALE
 	if not __supportedLocales.has_key(locale):
@@ -105,17 +293,16 @@ def setLocale(locale):
 
 
 def getLocale():
-	"""get locale"""
+	"""Get the locale"""
 	return LOCALE
 
 
 def setLicenseKey(license_key=None):
-	"""set license key
-
-	license key can come from any number of locations;
-	see module docs for search order.
-	if no license key is specified, NoLicenseKey is raised."""
-
+	"""Set AWS license key.
+	If license_key is not specified, the license key is set using the
+	environment variable: AMAZON_LICENSE_KEY; if no license key is 
+	set, NoLicenseKey exception is raised."""
+	
 	global LICENSE_KEY
 	for get in __licenseKeys:
 		rc = get(license_key)
@@ -126,9 +313,8 @@ def setLicenseKey(license_key=None):
 
 
 def getLicenseKey():
-	"""get license key
-
-	if no license key is specified,  NoLicenseKey is raised."""
+	"""Get license key.
+	If no license key is specified,  NoLicenseKey is raised."""
 
 	if not LICENSE_KEY:
 		setLicenseKey()
@@ -136,14 +322,18 @@ def getLicenseKey():
 
 
 def getVersion():
-	'''get the version of ECS specification'''
+	"""Get the version of ECS specification"""
 	return VERSION
 	
 
 def setOptions(options):
-	'''set the general optional parameter
-	available options are:
-		AssociateTag, MerchantID, Version, Validate'''
+	"""
+	Set the general optional parameter, available options are:
+	- AssociateTag
+	- MerchantID
+	- Version
+	- Validate
+	"""
 	
 	if set(options.keys()).issubset( set(['AssociateTag', 'MerchantID', 'Validate']) ):
 		global OPTIONS
@@ -153,13 +343,12 @@ def setOptions(options):
 
 		
 def getOptions():
+	"""Get options"""
 	return OPTIONS 
 
 
 def buildRequest(argv):
-	"""Build the REST request URL from argv,
-	
-	all key, value pairs in argv are quoted."""
+	"""Build the REST request URL from argv."""
 
 	url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&" + 'Version=%s&' % VERSION
 	if not argv['AWSAccessKeyId']:
@@ -170,8 +359,7 @@ def buildRequest(argv):
 
 def buildException(els):
 	"""Build the exception from the returned DOM node
-
-	Only the first exception is raised."""
+	Note: only the first exception is raised."""
 
 	error = els[0]
 	class_name = error.childNodes[0].firstChild.data[4:]
@@ -183,8 +371,7 @@ def buildException(els):
 
 def query(url):
 	"""Send the query url and return the DOM
-	
-	Exception is raised if there is errors"""
+	Exception is raised if there are errors"""
 	u = urllib.FancyURLopener()
 	usock = u.open(url)
 	dom = minidom.parse(usock)
@@ -197,101 +384,31 @@ def query(url):
 	return dom
 
 
-def rawObject(XMLSearch, arguments, kwItem, plugins=None):
-	'''Return a unique object'''
-
-	dom = XMLSearch(** arguments)
-	return unmarshal(dom.getElementsByTagName(kwItem).item(0), plugins) 
-
-	
-def rawIterator(XMLSearch, arguments, kwItems, plugins=None):
-	'''Return list of objects'''
-
-	dom = XMLSearch(** arguments)
-	items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
-	return items
-
-class wrappedIterator(list):
-	'''Return inherited list object, 
-	
-	we may add more attributes later'''
-	
-	pass
-	
-
-class pagedIterator:
-	'''Return a page-based iterator'''
-
-	def __init__(self, XMLSearch, arguments, kwPage, kwItems, plugins=None, pageSize=10):
-		"""XMLSearch: the callback function that returns the DOM
-		arguments: the arguments for XMLSearch
-		kwPage, kwItems: Tag name of Page, Items to organize the object
-		plugins: please check unmarshal
-		"""
-		self.__search = XMLSearch 
-		self.__arguments = arguments 
-		self.__keywords ={'Page':kwPage, 'Items':kwItems} 
-		self.__plugins = plugins
-		self.__page = arguments[kwPage] or 1
-		self.__index = 0
-		self.__pageSize = pageSize
-		dom = self.__search(** self.__arguments)
-		self.__items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, wrappedIterator())
-		try:
-			self.__len = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
-		except AttributeError, e:
-			self.__len = len(self.__items)
-
-	def __len__(self):
-		return self.__len
-
-	def __iter__(self):
-		return self
-
-	def next(self):
-		if self.__index < self.__len:
-			self.__index = self.__index + 1
-			return self.__getitem__(self.__index-1)
-		else:
-			raise StopIteration
-
-	def __getitem__(self, key):
-		num = int(key)
-		if num >= self.__len:
-			raise IndexError
-
-		page = num / self.__pageSize + 1
-		index = num % self.__pageSize
-		if page != self.__page:
-			self.__arguments[self.__keywords['Page']] = page
-			dom = self.__search(** self.__arguments)
-			self.__items = unmarshal(dom.getElementsByTagName(self.__keywords['Items']).item(0), self.__plugins, wrappedIterator())
-			self.__page = page
-
-		return self.__items[index]
-
-
 def unmarshal(element, plugins=None, rc=None):
-	"""Return the Bag object with attributes populated using DOM element
+	"""Return the `Bag` / `listIterator` object with attributes 
+	populated using DOM element.
+	
+	Parameters:
 
-	element: the root of the DOM element we are interested in
-	plugins: callback functions to fine-tune the object structure
-	rc: parent object, used in the recursive call
+	- `element`: DOM object, the DOM element interested in
+	- `plugins`: a dictionary, collection of plugged objects to fine-tune
+	  the object attributes
+	- `rc`: Bag object, parent object
 
 	This core function is inspired by Mark Pilgrim (f8dy@diveintomark.org)
 	with some enhancement. Each node.tagName is evalued by plugins' callback
 	functions:
 		
-		if plugins['isBypassed'] is true:
-			this elment is ignored
-		if plugins['isPivoted'] is true:
-			this children of this elment is moved to grandparents
-			this object is ignored.
-		if plugins['isCollective'] is true:
-			this elment is mapped to []
-		if plugins['isCollected'] is true:
-			this children of elment is appended to grandparent
-			this object is ignored.
+	- if plugins['isBypassed'] is true, 
+	    this elment is ignored
+	- if plugins['isPivoted'] is true:
+	    this children of this elment is moved to grandparents
+	    this object is ignored.
+	- if plugins['isCollective'] is true:
+	    this elment is mapped to []
+	- if plugins['isCollected'] is true:
+	    this children of elment is appended to grandparent
+	    this object is ignored.
 	"""
 
 	if(rc == None):
@@ -315,7 +432,7 @@ def unmarshal(element, plugins=None, rc=None):
 				elif plugins.has_key('isBypassed') and plugins['isBypassed'](child.tagName):
 					continue
 				elif plugins.has_key('isCollective') and plugins['isCollective'](child.tagName):
-					setattr(rc, key, unmarshal(child, plugins, wrappedIterator([])))
+					setattr(rc, key, unmarshal(child, plugins, listIterator([])))
 				elif plugins.has_key('isCollected') and plugins['isCollected'](child.tagName):
 					rc.append(unmarshal(child, plugins))
 				else:
@@ -639,7 +756,9 @@ def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAc
 
 # BrowseNode
 def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
-	'''BrowseNodeLookup in AWS'''
+	"""
+	BrowseNodeLookup in AWS *important*
+	"""
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
 	plugins = {'isBypassed': lambda x: x == 'Request',
