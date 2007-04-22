@@ -160,7 +160,7 @@ def __buildPlugins():
 
 	"""
 	ResponseGroup and corresponding plugins:
-	ResponseGroup=>(isByPassed, isPivoted, isCollective, isCollected)
+	ResponseGroup=>(isBypassed, isPivoted, isCollective, isCollected)
 	"""
 	rgps = {
 		'Accessories': ((), (), (), ()), 
@@ -203,7 +203,7 @@ def __buildPlugins():
 		'Similarities': ((), (), (), ()),
 		'Small': ((), (), (), ()),
 		'Subjects': ((), (), (), ()),
-		'TopSellers': ((), (), (), ()),
+		'TopSellers': ((), (), (), ('TopSeller')),
 		'Tracks': ((), (), (), ()),
 		'TransactionDetails': ((), (), (), ()),
 		'VariationMinimum': ((), (), (), ()),
@@ -245,7 +245,7 @@ def __buildPlugins():
 		return s
 			
 	def unionPlugins(responseGroups):
-		return dict( [ (key, mergePlugins(responseGroups, index)) for index, key in enumerate(['isByPassed', 'isPivoted', 'isCollective', 'isCollected']) ])
+		return dict( [ (key, mergePlugins(responseGroups, index)) for index, key in enumerate(['isBypassed', 'isPivoted', 'isCollective', 'isCollected']) ])
 
 	return dict( [ (k, unionPlugins(v)) for k, v in orgs.items() ] )
 	
@@ -504,23 +504,20 @@ def unmarshal(element, plugins=None, rc=None):
 	with some enhancement. Each node.tagName is evalued by plugins' callback
 	functions:
 		
-	- if plugins['isBypassed'] is true, 
+	- if tagname in plugins['isBypassed']
 	    this elment is ignored
-	- if plugins['isPivoted'] is true:
+	- if tagname in plugins['isPivoted'] 
 	    this children of this elment is moved to grandparents
 	    this object is ignored.
-	- if plugins['isCollective'] is true:
+	- if tagname in plugins['isCollective'] 
 	    this elment is mapped to []
-	- if plugins['isCollected'] is true:
+	- if tagname in plugins['isCollected'] 
 	    this children of elment is appended to grandparent
 	    this object is ignored.
 	"""
 
 	if(rc == None):
 		rc = Bag()
-
-	if(plugins == None):
-		plugins = {}
 
 	childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
 
@@ -532,13 +529,13 @@ def unmarshal(element, plugins=None, rc=None):
 					setattr(rc, key, [getattr(rc, key)])
 				setattr(rc, key, getattr(rc, key) + [unmarshal(child, plugins)])
 			elif isinstance(child, minidom.Element):
-				if plugins.has_key('isPivoted') and plugins['isPivoted'](child.tagName):
-						unmarshal(child, plugins, rc)
-				elif plugins.has_key('isBypassed') and plugins['isBypassed'](child.tagName):
+				if child.tagName in plugins['isPivoted']:
+					unmarshal(child, plugins, rc)
+				elif child.tagName in plugins['isBypassed']:
 					continue
-				elif plugins.has_key('isCollective') and plugins['isCollective'](child.tagName):
+				elif child.tagName in plugins['isCollective']:
 					setattr(rc, key, unmarshal(child, plugins, listIterator([])))
-				elif plugins.has_key('isCollected') and plugins['isCollected'](child.tagName):
+				elif child.tagName in plugins['isCollected']:
 					rc.append(unmarshal(child, plugins))
 				else:
 					setattr(rc, key, unmarshal(child, plugins))
@@ -552,11 +549,13 @@ def unmarshal(element, plugins=None, rc=None):
 
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	'''ItemLookup in ECS'''
-
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPivoted': lambda x: x == 'ItemAttributes', 
-		'isCollective': lambda x: x == 'Items', 
-		'isCollected': lambda x: x == 'Item'}
+	argv = vars()
+	plugins = {
+		'isBypassed': ('Request',), 
+		'isPivoted': ('ItemAttributes',),
+		'isCollective': ('Items',), 
+		'isCollected': ('Item',)
+	}
 	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', plugins)
 
 	
@@ -564,17 +563,19 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 	'''DOM representation of ItemLookup in ECS'''
 
 	Operation = "ItemLookup"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	'''ItemSearch in ECS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
-		'isCollective': lambda x: x == 'Items', 
-		'isCollected': lambda x: x == 'Item'}
+	plugins = {
+		'isBypassed': (), 
+		'isPivoted': ('ItemAttributes',),
+		'isCollective': ('Items',), 
+		'isCollected': ('Item',)
+	}
 	return pagedIterator(XMLItemSearch, argv, "ItemPage", 'Items', plugins)
 
 
@@ -590,9 +591,12 @@ def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=Non
 	'''SimilarityLookup in ECS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
-		'isCollective': lambda x: x == 'Items',
-		'isCollected': lambda x: x == 'Item'}
+	plugins = {
+		'isBypassed': (), 
+		'isPivoted': ('ItemAttributes',),
+		'isCollective': ('Items',),
+		'isCollected': ('Item',)
+	}
 	return rawIterator(XMLSimilarityLookup, argv, 'Items', plugins)
 
 
@@ -610,9 +614,12 @@ def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None,
 	'''ListLookup in ECS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
-		'isCollective': lambda x: x == 'Lists', 
-		'isCollected': lambda x: x == 'List'}
+	plugins = {
+		'isBypassed': (), 
+		'isPivoted': ('ItemAttributes',),
+		'isCollective': ('Lists',), 
+		'isCollected': ('List',)
+	}
 	return pagedIterator(XMLListLookup, argv, 'ProductPage', 'Lists', plugins)
 
 
@@ -628,9 +635,12 @@ def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, C
 	'''ListSearch in ECS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isPivoted': lambda x: x == 'ItemAttributes',
-		'isCollective': lambda x: x == 'Lists', 
-		'isCollected': lambda x: x == 'List'}
+	plugins = {
+		'isBypassed': (), 
+		'isPivoted': ('ItemAttributes',),
+		'isCollective': ('Lists',), 
+		'isCollected': ('List',)
+	}
 	return pagedIterator(XMLListSearch, argv, 'ListPage', 'Lists', plugins)
 
 
@@ -753,9 +763,12 @@ def __fromListToItems(argv, items, id, actions):
 def __cartOperation(XMLSearch, arguments):
 	'''Generic cart operation'''
 
-	plugins = {'isBypassed': lambda x: x == 'Request',
-		'isCollective': lambda x: x in ('CartItems', 'SavedForLaterItems'),
-		'isCollected': lambda x: x in ('CartItem', 'SavedForLaterItem') }
+	plugins = {
+		'isBypassed': ('Request',),
+		'isPivoted': (), 
+		'isCollective': ('CartItems', 'SavedForLaterItems'),
+		'isCollected': ('CartItem', 'SavedForLaterItem') 
+	}
 	return rawObject(XMLSearch, arguments, 'Cart', plugins)
 
 
@@ -764,9 +777,12 @@ def SellerLookup(Sellers, FeedbackPage=None, ResponseGroup=None, AWSAccessKeyId=
 	'''SellerLookup in AWS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request',
-		'isCollective': lambda x: x == 'Sellers',
-		'isCollected': lambda x: x == 'Seller'}
+	plugins = {
+		'isBypassed': ('Request',),
+		'isPivoted': (), 
+		'isCollective': ('Sellers',),
+		'isCollected': ('Seller',)
+	}
 	return rawIterator(XMLSellerLookup, argv, 'Sellers', plugins)
 
 
@@ -788,9 +804,12 @@ def SellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSA
 	instead of pagedIterator. Hope Amazaon would fix this inconsistance'''
 	
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request',
-		'isCollective': lambda x: x == 'SellerListings', 
-		'isCollected': lambda x: x == 'SellerListing'}
+	plugins = {
+		'isBypassed': ('Request',),
+		'isPivoted': (), 
+		'isCollective': ('SellerListings',), 
+		'isCollected': ('SellerListing',)
+	}
 	return rawIterator(XMLSellerListingLookup, argv, "SellerListings", plugins)
 
 
@@ -806,9 +825,12 @@ def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Offer
 	'''SellerListingSearch in AWS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request',
-		'isCollective': lambda x: x == 'SellerListings', 
-		'isCollected': lambda x: x == 'SellerListing'}
+	plugins = {
+		'isBypassed': ('Request',),
+		'isPivoted': (), 
+		'isCollective': ('SellerListings',), 
+		'isCollected': ('SellerListing',)
+	}
 	return pagedIterator(XMLSellerListingSearch, argv, "ListingPage", "SellerListings", plugins)
 
 
@@ -824,9 +846,12 @@ def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=N
 	'''CustomerContentSearch in AWS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request',
-		'isCollective': lambda x: x in ('Customers', 'CustomerReviews'),
-		'isCollected': lambda x: x in ('Customer', 'Review')}
+	plugins = {
+		'isBypassed': ('Request',),
+		'isPivoted': (), 
+		'isCollective': ('Customers', 'CustomerReviews'),
+		'isCollected': ('Customer', 'Review')
+	}
 	return rawIterator(XMLCustomerContentSearch, argv, 'Customers', plugins)
 
 
@@ -845,9 +870,12 @@ def CustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAcces
 	'''CustomerContentLookup in AWS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request',
-		'isCollective': lambda x: x == 'Customers',
-		'isCollected': lambda x: x == 'Customer'}
+	plugins = {
+		'isBypassed': ('Request',),
+		'isPivoted': (), 
+		'isCollective': ('Customers',),
+		'isCollected': ('Customer',)
+	}
 	return rawIterator(XMLCustomerContentLookup, argv, 'Customers', plugins)
 
 
@@ -866,9 +894,12 @@ def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	"""
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request',
-		'isCollective': lambda x: x in ('Children', 'Ancestors'),
-		'isCollected': lambda x: x == 'BrowseNode'}
+	plugins = {
+		'isBypassed': ('Request',),
+		'isPivoted': (), 
+		'isCollective': ('Children', 'Ancestors'),
+		'isCollected': ('BrowseNode',)
+	}
 	return rawIterator(XMLBrowseNodeLookup, argv, 'BrowseNodes', plugins)
 
 
@@ -885,11 +916,14 @@ def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 	'''Help in AWS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request', 
-		'isCollective': lambda x: x in ('RequiredParameters', 
+	plugins = {
+		'isBypassed': ('Request',), 
+		'isPivoted': (), 
+		'isCollective': ('RequiredParameters', 
 			'AvailableParameters', 'DefaultResponseGroups',
 			'AvailableResponseGroups'),
-		'isCollected': lambda x: x in ('Parameter', 'ResponseGroup') }
+		'isCollected': ('Parameter', 'ResponseGroup') 
+	}
 	return rawObject(XMLHelp, argv, 'Information', plugins)
 
 
@@ -906,10 +940,12 @@ def TransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None):
 	'''TransactionLookup in AWS'''
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	plugins = {'isBypassed': lambda x: x == 'Request', 
-		'isCollective': lambda x: x in ('Transactions', 'TransactionItems', 'Shipments'),
-		'isCollected': lambda x: x in ('Transaction', 'TransactionItem', 'Shipment')}
-			
+	plugins = {
+		'isBypassed': ('Request',), 
+		'isPivoted': (), 
+		'isCollective': ('Transactions', 'TransactionItems', 'Shipments'),
+		'isCollected': ('Transaction', 'TransactionItem', 'Shipment')
+	}		
 	return rawIterator(XMLTransactionLookup, argv, 'Transactions', plugins)
 	
 
@@ -923,6 +959,12 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 
 if __name__ == "__main__" :
-	setLicenseKey("YOUR-LICENSE-HERE");
-	dom = XMLBrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
+	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
+	dom = XMLItemLookup("0596009259")
 	print dom.toprettyxml()
+	books = ItemLookup("0596009259")
+	import pdb
+	pdb.set_trace()
+	obj = BrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
+	print obj
+	pdb.set_trace()
