@@ -124,7 +124,7 @@ __license__ = "Python Software Foundation"
 __docformat__ = 'restructuredtext'
 
 
-import os, urllib, string, inspect
+import os, urllib, string
 from xml.dom import minidom
 
 
@@ -569,7 +569,7 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	'''ItemSearch in ECS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': (), 
 		'isPivoted': ('ItemAttributes',),
@@ -583,14 +583,13 @@ def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None
 	'''DOM representation of ItemSearch in ECS'''
 
 	Operation = "ItemSearch"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	'''SimilarityLookup in ECS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': (), 
 		'isPivoted': ('ItemAttributes',),
@@ -604,8 +603,7 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 	'''DOM representation of SimilarityLookup in ECS'''
 
 	Operation = "SimilarityLookup"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 # List Operations
@@ -613,7 +611,7 @@ def XMLSimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=
 def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	'''ListLookup in ECS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': (), 
 		'isPivoted': ('ItemAttributes',),
@@ -627,14 +625,13 @@ def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=No
 	'''DOM representation of ListLookup in ECS'''
 
 	Operation = "ListLookup"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	'''ListSearch in ECS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': (), 
 		'isPivoted': ('ItemAttributes',),
@@ -648,23 +645,21 @@ def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None
 	'''DOM representation of ListSearch in ECS'''
 
 	Operation = "ListSearch"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 #Remote Shopping Cart Operations
 def CartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	'''CartCreate in ECS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return __cartOperation(XMLCartCreate, argv)
+	return __cartOperation(XMLCartCreate, vars())
 
 
 def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of CartCreate in ECS'''
 
 	Operation = "CartCreate"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	for x in ('Items', 'Quantities'):
 		del argv[x]
 
@@ -675,8 +670,7 @@ def XMLCartCreate(Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 def CartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
 	'''CartAdd in ECS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return __cartOperation(XMLCartAdd, argv)
+	return __cartOperation(XMLCartAdd, vars())
 
 
 def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None):
@@ -685,7 +679,7 @@ def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None)
 	Operation = "CartAdd"
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	for x in ('Items', 'Cart', 'Quantities'):
 		del argv[x]
 
@@ -695,8 +689,7 @@ def XMLCartAdd(Cart, Items, Quantities, ResponseGroup=None, AWSAccessKeyId=None)
 
 def CartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	'''CartGet in ECS'''
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return __cartOperation(XMLCartGet, argv)
+	return __cartOperation(XMLCartGet, vars())
 
 
 def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
@@ -705,7 +698,7 @@ def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartGet"
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	del argv['Cart']
 	return query(buildRequest(argv))
 
@@ -713,8 +706,7 @@ def XMLCartGet(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 def CartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
 	'''CartModify in ECS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return __cartOperation(XMLCartModify, argv)
+	return __cartOperation(XMLCartModify, vars())
 
 
 def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None):
@@ -722,7 +714,7 @@ def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None)
 	Operation = "CartModify"
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	for x in ('Cart', 'Items', 'Actions'):
 		del argv[x]
 
@@ -732,8 +724,7 @@ def XMLCartModify(Cart, Items, Actions, ResponseGroup=None, AWSAccessKeyId=None)
 	
 def CartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	'''CartClear in ECS'''
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return __cartOperation(XMLCartClear, argv)
+	return __cartOperation(XMLCartClear, vars())
 
 
 def XMLCartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
@@ -742,7 +733,7 @@ def XMLCartClear(Cart, ResponseGroup=None, AWSAccessKeyId=None):
 	Operation = "CartClear"
 	CartId = Cart.CartId
 	HMAC = Cart.HMAC
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	del argv['Cart']
 
 	return query(buildRequest(argv))
@@ -776,7 +767,7 @@ def __cartOperation(XMLSearch, arguments):
 def SellerLookup(Sellers, FeedbackPage=None, ResponseGroup=None, AWSAccessKeyId=None):
 	'''SellerLookup in AWS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
@@ -791,7 +782,7 @@ def XMLSellerLookup(Sellers, FeedbackPage=None, ResponseGroup=None, AWSAccessKey
 
 	Operation = "SellerLookup"
 	SellerId = ",".join(Sellers)
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	del argv['Sellers']
 	return query(buildRequest(argv))
 
@@ -803,7 +794,7 @@ def SellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSA
 	there is no ListingPage in the request, so we have to use rawIterator
 	instead of pagedIterator. Hope Amazaon would fix this inconsistance'''
 	
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
@@ -817,14 +808,13 @@ def XMLSellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, A
 	'''DOM representation of SellerListingLookup in AWS'''
 
 	Operation = "SellerListingLookup"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None):
 	'''SellerListingSearch in AWS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
@@ -838,14 +828,13 @@ def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Of
 	'''DOM representation of SellerListingSearch in AWS'''
 
 	Operation = "SellerListingSearch"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	'''CustomerContentSearch in AWS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
@@ -859,7 +848,7 @@ def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGrou
 	'''DOM representation of CustomerContentSearch in AWS'''
 
 	Operation = "CustomerContentSearch"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	for x in ('Name', 'Email'):
 		if not argv[x]:
 			del argv[x]
@@ -869,7 +858,7 @@ def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGrou
 def CustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	'''CustomerContentLookup in AWS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
@@ -883,8 +872,7 @@ def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAc
 	'''DOM representation of CustomerContentLookup in AWS'''
 
 	Operation = "CustomerContentLookup"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 # BrowseNode
@@ -893,7 +881,7 @@ def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	BrowseNodeLookup in AWS 
 	"""
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
@@ -907,15 +895,14 @@ def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of BrowseNodeLookup in AWS'''
 	
 	Operation = "BrowseNodeLookup"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 # Help
 def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 	'''Help in AWS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': ('Request',), 
 		'isPivoted': (), 
@@ -931,15 +918,14 @@ def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 	'''DOM representation of Help in AWS'''
 
 	Operation = "Help"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 # Transaction
 def TransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None):
 	'''TransactionLookup in AWS'''
 
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
+	argv = vars()
 	plugins = {
 		'isBypassed': ('Request',), 
 		'isPivoted': (), 
@@ -953,8 +939,7 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 	'''DOM representation of TransactionLookup in AWS'''
 
 	Operation = "TransactionLookup"
-	argv = inspect.getargvalues(inspect.currentframe())[-1]
-	return query(buildRequest(argv))
+	return query(buildRequest(vars()))
 
 
 
