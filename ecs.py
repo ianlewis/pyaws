@@ -152,6 +152,106 @@ __licenseKeys = (
    )
 
 
+
+def __buildPlugins():
+	"""
+	Build plugins used in unmarshal
+	"""
+
+	"""
+	ResponseGroup and corresponding plugins:
+	ResponseGroup=>(isByPassed, isPivoted, isCollective, isCollected)
+	"""
+	rgps = {
+		'Accessories': ((), (), (), ()), 
+		'AlternateVersions': ((), (), (), ()), 
+		'BrowseNodeInfo': ((), (), ('Children', 'Ancestors'), ('BrowseNode')),
+		'BrowseNodes': ((), (), (), ()),
+		'Cart': ((), (), (), ()),
+		'CartNewReleases': ((), (), (), ()),
+		'CartTopSellers': ((), (), (), ()),
+		'CartSimilarities': ((), (), (), ()),
+		'Collections': ((), (), (), ()),
+		'CustomerFull': ((), (), (), ()),
+		'CustomerInfo': ((), (), (), ()),
+		'CustomerLists': ((), (), (), ()),
+		'CustomerReviews': ((), (), (), ()),
+		'EditorialReview': ((), (), (), ()),
+		'Help': ((), (), (), ()),
+		'Images': ((), (), (), ()),
+		'ItemAttributes': ((), (), (), ()),
+		'ItemIds': ((), (), (), ()),
+		'Large': ((), (), (), ()),
+		'ListFull': ((), (), (), ()),
+		'ListInfo': ((), (), (), ()),
+		'ListItems': ((), (), (), ()),
+		'ListManiaLists': ((), (), (), ()),
+		'ListMinimum': ((), (), (), ()),
+		'Medium': ((), (), (), ()),
+		'MerchantItemAttributes': ((), (), (), ()),
+		'NewReleases': ((), (), (), ('NewRelease')),
+		'OfferFull': ((), (), (), ()),
+		'OfferListings': ((), (), (), ()),
+		'Offers': ((), (), (), ()),
+		'OfferSummary': ((), (), (), ()),
+		'Request': ((), (), (), ()),
+		'Reviews': ((), (), (), ()),
+		'SalesRank': ((), (), (), ()),
+		'SearchBins': ((), (), (), ()),
+		'Seller': ((), (), (), ()),
+		'SellerListing': ((), (), (), ()),
+		'Similarities': ((), (), (), ()),
+		'Small': ((), (), (), ()),
+		'Subjects': ((), (), (), ()),
+		'TopSellers': ((), (), (), ()),
+		'Tracks': ((), (), (), ()),
+		'TransactionDetails': ((), (), (), ()),
+		'VariationMinimum': ((), (), (), ()),
+		'Variations': ((), (), (), ()),
+		'VariationImages': ((), (), (), ()),
+		'VariationSummary':((), (), (), ()) 
+	}
+	
+	orgs = {
+		"""
+		Operation=>ResponseGroups 
+		"""
+		'BrowseNodeLookup': ('Request', 'BrowseNodeInfo', 'NewReleases', 'TopSellers'),
+		'CartAdd': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'NewReleases'),
+		'CartClear': ('Cart', 'Request'),
+		'CartCreate': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'CartNewReleases'),
+		'CartGet': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'CartNewReleases'),
+		'CartModify': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'CartNewReleases'),
+		'CustomerContentLookup': ('Request', 'CustomerInfo', 'CustomerReviews', 'CustomerLists', 'CustomerFull'),
+		'CustomerContentSearch': ('Request', 'CustomerInfo'),
+		'Help': ('Request', 'Help'),
+		'ItemLookup': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListManiaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationImages', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'ItemSearch': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'ItemAttributes', 'ItemIds', 'Large', 'ListManiaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'SearchBins', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'ListLookup': ('Request', 'ListInfo', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListFull', 'ListItems', 'ListManiaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'ListSearch': ('Request', 'ListInfo', 'ListMinimum'),
+		'SellerListingLookup': ('Request', 'SellerListing'),
+		'SellerListingSearch': ('Request', 'SellerListing'),
+		'SellerLookup': ('Request', 'Seller'),
+		'SimilarityLookup': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListManiaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'TransactionLookup':('Request', 'TransactionDetails') 
+	}
+
+	def mergePlugins(responseGroups, index):
+		#return reduce(lambda x, y: x.update(set(rgps[y][index])), responseGroups, set()) 
+		# this magic reduce does not work, using the primary implementation first.
+		s = set()
+		for x in responseGroups:
+			s.update(set(rgps[x][index]))
+		return s
+			
+	def unionPlugins(responseGroups):
+		return dict( [ (key, mergePlugins(responseGroups, index)) for index, key in enumerate(['isByPassed', 'isPivoted', 'isCollective', 'isCollected']) ])
+
+	return dict( [ (k, unionPlugins(v)) for k, v in orgs.items() ] )
+	
+
+__plugins = __buildPlugins()
+
 # Wrapper class for ECS
 class Bag : 
 	"""A generic container for the python objects"""
@@ -355,6 +455,11 @@ def buildRequest(argv):
 		argv['AWSAccessKeyId'] = getLicenseKey()
 	argv.update(getOptions())
 	return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
+
+
+def buildPlugins(operation):
+	pass
+	
 
 
 def buildException(els):
@@ -757,7 +862,7 @@ def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAc
 # BrowseNode
 def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	"""
-	BrowseNodeLookup in AWS *important*
+	BrowseNodeLookup in AWS 
 	"""
 
 	argv = inspect.getargvalues(inspect.currentframe())[-1]
@@ -819,6 +924,5 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 if __name__ == "__main__" :
 	setLicenseKey("YOUR-LICENSE-HERE");
-	dom = XMLBrowseNodeLookup('1065852')
+	dom = XMLBrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
 	print dom.toprettyxml()
-
