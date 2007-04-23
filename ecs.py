@@ -165,7 +165,7 @@ def __buildPlugins():
 	rgps = {
 		'Accessories': ((), (), (), ()), 
 		'AlternateVersions': ((), (), (), ()), 
-		'BrowseNodeInfo': ((), (), ('Children', 'Ancestors'), ('BrowseNode')),
+		'BrowseNodeInfo': ((), (), ('Children', 'Ancestors'), ('BrowseNode',)),
 		'BrowseNodes': ((), (), (), ()),
 		'Cart': ((), (), (), ()),
 		'CartNewReleases': ((), (), (), ()),
@@ -189,12 +189,12 @@ def __buildPlugins():
 		'ListMinimum': ((), (), (), ()),
 		'Medium': ((), (), (), ()),
 		'MerchantItemAttributes': ((), (), (), ()),
-		'NewReleases': ((), (), (), ('NewRelease')),
+		'NewReleases': ((), (), (), ('NewRelease', )),
 		'OfferFull': ((), (), (), ()),
 		'OfferListings': ((), (), (), ()),
 		'Offers': ((), (), (), ()),
 		'OfferSummary': ((), (), (), ()),
-		'Request': ((), (), (), ()),
+		'Request': (('Request',), (), (), ()),
 		'Reviews': ((), (), (), ()),
 		'SalesRank': ((), (), (), ()),
 		'SearchBins': ((), (), (), ()),
@@ -203,7 +203,7 @@ def __buildPlugins():
 		'Similarities': ((), (), (), ()),
 		'Small': ((), (), (), ()),
 		'Subjects': ((), (), (), ()),
-		'TopSellers': ((), (), (), ('TopSeller')),
+		'TopSellers': ((), (), (), ('TopSeller', )),
 		'Tracks': ((), (), (), ()),
 		'TransactionDetails': ((), (), (), ()),
 		'VariationMinimum': ((), (), (), ()),
@@ -212,10 +212,10 @@ def __buildPlugins():
 		'VariationSummary':((), (), (), ()) 
 	}
 	
+	"""
+	Operation=>ResponseGroups 
+	"""
 	orgs = {
-		"""
-		Operation=>ResponseGroups 
-		"""
 		'BrowseNodeLookup': ('Request', 'BrowseNodeInfo', 'NewReleases', 'TopSellers'),
 		'CartAdd': ('Cart', 'Request', 'CartSimilarities', 'CartTopSellers', 'NewReleases'),
 		'CartClear': ('Cart', 'Request'),
@@ -880,15 +880,8 @@ def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	"""
 	BrowseNodeLookup in AWS 
 	"""
-
-	argv = vars()
-	plugins = {
-		'isBypassed': ('Request',),
-		'isPivoted': (), 
-		'isCollective': ('Children', 'Ancestors'),
-		'isCollected': ('BrowseNode',)
-	}
-	return rawIterator(XMLBrowseNodeLookup, argv, 'BrowseNodes', plugins)
+	print __plugins['BrowseNodeLookup']
+	return rawIterator(XMLBrowseNodeLookup, vars(), 'BrowseNodes', __plugins['BrowseNodeLookup'])
 
 
 def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
