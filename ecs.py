@@ -156,6 +156,9 @@ __licenseKeys = (
 def __buildPlugins():
 	"""
 	Build plugins used in unmarshal
+	Return the dict like:
+	Operation => { 'isByPassed'=>(...), 'isPivoted'=>(...), 
+		'isCollective'=>(...), 'isCollected'=>(...) }  
 	"""
 
 	"""
@@ -177,7 +180,9 @@ def __buildPlugins():
 		'CustomerLists': ((), (), (), ()),
 		'CustomerReviews': ((), (), (), ()),
 		'EditorialReview': ((), (), (), ()),
-		'Help': ((), (), (), ()),
+		'Help': ((), (), ('RequiredParameters', 'AvailableParameters',
+			'DefaultResponseGroups', 'AvailableResponseGroups'),
+			 ('Parameter', 'ResponseGroup')),
 		'Images': ((), (), (), ()),
 		'ItemAttributes': ((), (), (), ()),
 		'ItemIds': ((), (), (), ()),
@@ -455,11 +460,6 @@ def buildRequest(argv):
 		argv['AWSAccessKeyId'] = getLicenseKey()
 	argv.update(getOptions())
 	return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
-
-
-def buildPlugins(operation):
-	pass
-	
 
 
 def buildException(els):
@@ -893,17 +893,7 @@ def XMLBrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 # Help
 def Help(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 	'''Help in AWS'''
-
-	argv = vars()
-	plugins = {
-		'isBypassed': ('Request',), 
-		'isPivoted': (), 
-		'isCollective': ('RequiredParameters', 
-			'AvailableParameters', 'DefaultResponseGroups',
-			'AvailableResponseGroups'),
-		'isCollected': ('Parameter', 'ResponseGroup') 
-	}
-	return rawObject(XMLHelp, argv, 'Information', plugins)
+	return rawObject(XMLHelp, vars(), 'Information', __plugins['Help'])
 
 
 def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
