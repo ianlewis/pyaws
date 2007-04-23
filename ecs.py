@@ -189,7 +189,7 @@ def __buildPlugins():
 		'ListMinimum': ((), (), (), ()),
 		'Medium': ((), (), (), ()),
 		'MerchantItemAttributes': ((), (), (), ()),
-		'NewReleases': ((), (), (), ('NewRelease', )),
+		'NewReleases': ((), (), ('NewReleases',), ('NewRelease',)),
 		'OfferFull': ((), (), (), ()),
 		'OfferListings': ((), (), (), ()),
 		'Offers': ((), (), (), ()),
@@ -203,7 +203,7 @@ def __buildPlugins():
 		'Similarities': ((), (), (), ()),
 		'Small': ((), (), (), ()),
 		'Subjects': ((), (), (), ()),
-		'TopSellers': ((), (), (), ('TopSeller', )),
+		'TopSellers': ((), (), ('TopSellers',), ('TopSeller',)),
 		'Tracks': ((), (), (), ()),
 		'TransactionDetails': ((), (), (), ()),
 		'VariationMinimum': ((), (), (), ()),
@@ -880,7 +880,6 @@ def BrowseNodeLookup(BrowseNodeId, ResponseGroup=None, AWSAccessKeyId=None):
 	"""
 	BrowseNodeLookup in AWS 
 	"""
-	print __plugins['BrowseNodeLookup']
 	return rawIterator(XMLBrowseNodeLookup, vars(), 'BrowseNodes', __plugins['BrowseNodeLookup'])
 
 
@@ -938,11 +937,7 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-	dom = XMLItemLookup("0596009259")
+	dom = XMLBrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
 	print dom.toprettyxml()
-	books = ItemLookup("0596009259")
-	import pdb
-	pdb.set_trace()
 	obj = BrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
 	print obj
-	pdb.set_trace()
