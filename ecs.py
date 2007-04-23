@@ -210,7 +210,8 @@ def __buildPlugins():
 		'Subjects': ((), (), (), ()),
 		'TopSellers': ((), (), ('TopSellers',), ('TopSeller',)),
 		'Tracks': ((), (), (), ()),
-		'TransactionDetails': ((), (), (), ()),
+		'TransactionDetails': ((), (), ('Transactions', 'TransactionItems', 'Shipments'),
+			('Transaction', 'TransactionItem', 'Shipment')),
 		'VariationMinimum': ((), (), (), ()),
 		'Variations': ((), (), (), ()),
 		'VariationImages': ((), (), (), ()),
@@ -906,15 +907,7 @@ def XMLHelp(HelpType, About, ResponseGroup=None, AWSAccessKeyId=None):
 # Transaction
 def TransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None):
 	'''TransactionLookup in AWS'''
-
-	argv = vars()
-	plugins = {
-		'isBypassed': ('Request',), 
-		'isPivoted': (), 
-		'isCollective': ('Transactions', 'TransactionItems', 'Shipments'),
-		'isCollected': ('Transaction', 'TransactionItem', 'Shipment')
-	}		
-	return rawIterator(XMLTransactionLookup, argv, 'Transactions', plugins)
+	return rawIterator(XMLTransactionLookup, vars(), 'Transactions', __plugins['TransactionLookup'])
 	
 
 def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None):
