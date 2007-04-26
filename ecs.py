@@ -268,13 +268,13 @@ class Bag :
 def rawObject(XMLSearch, arguments, kwItem, plugins=None):
 	"""Return simple object from `unmarshal`"""
 	dom = XMLSearch(** arguments)
-	return unmarshal(dom.getElementsByTagName(kwItem).item(0), plugins) 
+	return unmarshal(XMLSearch, arguments, dom.getElementsByTagName(kwItem).item(0), plugins) 
 
 
 def rawIterator(XMLSearch, arguments, kwItems, plugins=None):
 	"""Return list of objects from `unmarshal`"""
 	dom = XMLSearch(** arguments)
-	return unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, listIterator())
+	return unmarshal(XMLSearch, arguments, dom.getElementsByTagName(kwItems).item(0), plugins, listIterator())
 
 
 class listIterator(list):
@@ -318,7 +318,7 @@ class pagedIterator:
 		self.__pageSize = pageSize
 
 		dom = self.__search(** self.__arguments)
-		self.__items = unmarshal(dom.getElementsByTagName(kwItems).item(0), plugins, listIterator())
+		self.__items = unmarshal(XMLSearch, arguments, dom.getElementsByTagName(kwItems).item(0), plugins, listIterator())
 		"""Cached items"""
 		try:
 			self.__len = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
@@ -348,7 +348,7 @@ class pagedIterator:
 		if page != self.__page:
 			self.__arguments[self.__keywords['Page']] = page
 			dom = self.__search(** self.__arguments)
-			self.__items = unmarshal(dom.getElementsByTagName(self.__keywords['Items']).item(0), self.__plugins, listIterator())
+			self.__items = unmarshal(self.__search, self.__arguments, dom.getElementsByTagName(self.__keywords['Items']).item(0), self.__plugins, listIterator())
 			self.__page = page
 
 		return self.__items[index]
@@ -490,7 +490,7 @@ def query(url):
 	return dom
 
 
-def unmarshal(element, plugins=None, rc=None):
+def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 	"""Return the `Bag` / `listIterator` object with attributes 
 	populated using DOM element.
 	
@@ -528,18 +528,18 @@ def unmarshal(element, plugins=None, rc=None):
 			if hasattr(rc, key):
 				if type(getattr(rc, key)) <> type([]):
 					setattr(rc, key, [getattr(rc, key)])
-				setattr(rc, key, getattr(rc, key) + [unmarshal(child, plugins)])
+				setattr(rc, key, getattr(rc, key) + [unmarshal(XMLSearch, arguments, child, plugins)])
 			elif isinstance(child, minidom.Element):
 				if child.tagName in plugins['isPivoted']:
-					unmarshal(child, plugins, rc)
+					unmarshal(XMLSearch, arguments, child, plugins, rc)
 				elif child.tagName in plugins['isBypassed']:
 					continue
 				elif child.tagName in plugins['isCollective']:
-					setattr(rc, key, unmarshal(child, plugins, listIterator([])))
+					setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins, listIterator([])))
 				elif child.tagName in plugins['isCollected']:
-					rc.append(unmarshal(child, plugins))
+					rc.append(unmarshal(XMLSearch, arguments, child, plugins))
 				else:
-					setattr(rc, key, unmarshal(child, plugins))
+					setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins))
 	else:
 		rc = "".join([e.data for e in element.childNodes if isinstance(e, minidom.Text)])
 	return rc
@@ -915,7 +915,9 @@ if __name__ == "__main__" :
 	import pdb
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
 	obj = BrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
-	print obj
+
+	s = XMLCustomerContentSearch('Manoj Agrawal')
+	print s.toprettyxml()
 	
-	s = XMLCustomerContentSearch('Sam', None, 20, ResponseGroup='CustomerInfo')
+	s = XMLCustomerContentLookup('A2KEKKJ9CAC2KC', ResponseGroup=','.join(['Request', 'CustomerInfo', 'CustomerReviews', 'CustomerLists', 'CustomerFull']))
 	print s.toprettyxml()

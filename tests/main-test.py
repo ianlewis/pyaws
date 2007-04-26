@@ -183,7 +183,7 @@ class BrowseNodeLookupTest(unittest.TestCase):
 
 		self.assertEqual(bnl[0].Ancestors[0].Ancestors[0].Name, 'TVs & HDTVs')
 		self.assertEqual(bnl[0].TopSellers[0].ASIN, 'B000F4CTUK')
-		self.assertEqual(bnl[0].NewReleases[1].ASIN, 'B000NEDYU6')
+		self.assertEqual(bnl[0].NewReleases[1].ASIN, 'B000O321IW')
 
 class HelpTest(unittest.TestCase):
 	def setUp(self):
