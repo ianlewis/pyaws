@@ -176,7 +176,7 @@ def __buildPlugins():
 		'CartSimilarities': ((), (), (), ()),
 		'Collections': ((), (), (), ()),
 		'CustomerFull': ((), (), (), ()),
-		'CustomerInfo': ((), (), (), ()),
+		'CustomerInfo': ((), (), ('Customers',), ('Customer',)),
 		'CustomerLists': ((), (), (), ()),
 		'CustomerReviews': ((), (), (), ()),
 		'EditorialReview': ((), (), (), ()),
@@ -835,14 +835,7 @@ def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Of
 def CustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
 	'''CustomerContentSearch in AWS'''
 
-	argv = vars()
-	plugins = {
-		'isBypassed': ('Request',),
-		'isPivoted': (), 
-		'isCollective': ('Customers', 'CustomerReviews'),
-		'isCollected': ('Customer', 'Review')
-	}
-	return rawIterator(XMLCustomerContentSearch, argv, 'Customers', plugins)
+	return rawIterator(XMLCustomerContentSearch, vars(), 'Customers', __plugins['CustomerContentSearch'])
 
 
 def XMLCustomerContentSearch(Name=None, Email=None, CustomerPage=1, ResponseGroup=None, AWSAccessKeyId=None):
@@ -919,8 +912,10 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 
 if __name__ == "__main__" :
+	import pdb
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-	dom = XMLBrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
-	print dom.toprettyxml()
 	obj = BrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
 	print obj
+	
+	s = XMLCustomerContentSearch('Sam', None, 20, ResponseGroup='CustomerInfo')
+	print s.toprettyxml()

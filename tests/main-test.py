@@ -166,20 +166,24 @@ class CustomerTest(unittest.TestCase):
 	def testCustomerContentSearch(self):
 		cs = ecs.CustomerContentSearch('Sam', None, 20)
 		self.assertEqual(len(cs), 20)
+		self.assertEqual(cs[0].CustomerId, 'A2PJ0LTNVGNVGI')
 
 class BrowseNodeLookupTest(unittest.TestCase):
 	def setUp(self):
 		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testBrowserNodeLookup(self):
-		bnl = ecs.BrowseNodeLookup('1065852')
+		bnl = ecs.BrowseNodeLookup('1065852', ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
 		self.assertEqual(len(bnl), 1)
 		self.assertEqual(bnl[0].Name, 'Plasma TVs')
 		children = bnl[0].Children
 		self.assertEqual(len(children), 2)
-
 		self.assertEqual(children[0].BrowseNodeId, '13005341')
 		self.assertEqual(children[1].BrowseNodeId, '11091111')
+
+		self.assertEqual(bnl[0].Ancestors[0].Ancestors[0].Name, 'TVs & HDTVs')
+		self.assertEqual(bnl[0].TopSellers[0].ASIN, 'B000F4CTUK')
+		self.assertEqual(bnl[0].NewReleases[1].ASIN, 'B000NEDYU6')
 
 class HelpTest(unittest.TestCase):
 	def setUp(self):
