@@ -58,6 +58,7 @@ Functions:
 - `query`
 - `rawObject`
 - `rawIterator`
+- `pagedWrapper`
 - `unmarshal`
 - `ItemLookup`
 - `XMLItemLookup`
@@ -158,64 +159,80 @@ def __buildPlugins():
 	Build plugins used in unmarshal
 	Return the dict like:
 	Operation => { 'isByPassed'=>(...), 'isPivoted'=>(...), 
-		'isCollective'=>(...), 'isCollected'=>(...) }  
+		'isCollective'=>(...), 'isCollected'=>(...), 
+		isPaged=> { key1: (...), key2: (...), ... }  
+	isPaged is defined as:
+	{ kwItems : (kwPage, kwTotalResults, pageSize) }
+
+	- kwItems: string, the tagname of collection
+	- kwPage: integer, current page
+	- kwTotalResults: integer, the length of collection
+	- pageSize: constant integer, the size of each page
+
 	"""
 
 	"""
 	ResponseGroup and corresponding plugins:
-	ResponseGroup=>(isBypassed, isPivoted, isCollective, isCollected)
+	ResponseGroup=>(isBypassed, isPivoted, isCollective, isCollected, isPaged)
+	TODO: Use the following sequence for optimization:
+		isCollective, isCollected, isPaged, isBypassed, isPivoted
+
+	isPaged is defined as:
+		(collective, collected, totalItems, page) 
+		
 	"""
 	rgps = {
-		'Accessories': ((), (), (), ()), 
-		'AlternateVersions': ((), (), (), ()), 
-		'BrowseNodeInfo': ((), (), ('Children', 'Ancestors'), ('BrowseNode',)),
-		'BrowseNodes': ((), (), (), ()),
-		'Cart': ((), (), (), ()),
-		'CartNewReleases': ((), (), (), ()),
-		'CartTopSellers': ((), (), (), ()),
-		'CartSimilarities': ((), (), (), ()),
-		'Collections': ((), (), (), ()),
-		'CustomerFull': ((), (), (), ()),
-		'CustomerInfo': ((), (), ('Customers',), ('Customer',)),
-		'CustomerLists': ((), (), (), ()),
-		'CustomerReviews': ((), (), (), ()),
-		'EditorialReview': ((), (), (), ()),
+		'Accessories': ((), (), (), (), {}), 
+		'AlternateVersions': ((), (), (), (), {}), 
+		'BrowseNodeInfo': ((), (), ('Children', 'Ancestors'), ('BrowseNode',), {}),
+		'BrowseNodes': ((), (), (), (), {}),
+		'Cart': ((), (), (), (), {}),
+		'CartNewReleases': ((), (), (), (), {}),
+		'CartTopSellers': ((), (), (), (), {}),
+		'CartSimilarities': ((), (), (), (), {}),
+		'Collections': ((), (), (), (), {}),
+		'CustomerFull': ((), (), (), (), {}),
+		'CustomerInfo': ((), (), ('Customers',), ('Customer',), {}),
+		'CustomerLists': ((), (), ('Customers',), ('Customer',), {}),
+		'CustomerReviews': ((), (), ('Customers',),('Customer', 'Review'), 
+			{'CustomerReviews': ('ReviewPage', 'TotalReviews', 10)}),
+		'EditorialReview': ((), (), (), (), {}),
 		'Help': ((), (), ('RequiredParameters', 'AvailableParameters',
 			'DefaultResponseGroups', 'AvailableResponseGroups'),
-			 ('Parameter', 'ResponseGroup')),
-		'Images': ((), (), (), ()),
-		'ItemAttributes': ((), (), (), ()),
-		'ItemIds': ((), (), (), ()),
-		'Large': ((), (), (), ()),
-		'ListFull': ((), (), (), ()),
-		'ListInfo': ((), (), (), ()),
-		'ListItems': ((), (), (), ()),
-		'ListManiaLists': ((), (), (), ()),
-		'ListMinimum': ((), (), (), ()),
-		'Medium': ((), (), (), ()),
-		'MerchantItemAttributes': ((), (), (), ()),
-		'NewReleases': ((), (), ('NewReleases',), ('NewRelease',)),
-		'OfferFull': ((), (), (), ()),
-		'OfferListings': ((), (), (), ()),
-		'Offers': ((), (), (), ()),
-		'OfferSummary': ((), (), (), ()),
-		'Request': (('Request',), (), (), ()),
-		'Reviews': ((), (), (), ()),
-		'SalesRank': ((), (), (), ()),
-		'SearchBins': ((), (), (), ()),
-		'Seller': ((), (), (), ()),
-		'SellerListing': ((), (), (), ()),
-		'Similarities': ((), (), (), ()),
-		'Small': ((), (), (), ()),
-		'Subjects': ((), (), (), ()),
-		'TopSellers': ((), (), ('TopSellers',), ('TopSeller',)),
-		'Tracks': ((), (), (), ()),
+			 ('Parameter', 'ResponseGroup'), {}),
+		'Images': ((), (), (), (), {}),
+		'ItemAttributes': ((), (), (), (), {}),
+		'ItemIds': ((), (), (), (), {}),
+		'Large': ((), (), (), (), {}),
+		'ListFull': ((), (), (), (), {}),
+		'ListInfo': ((), (), (), (), {}),
+		'ListItems': ((), (), (), (), {}),
+		'ListManiaLists': ((), (), (), (), {}),
+		'ListMinimum': ((), (), (), (), {}),
+		'Medium': ((), (), (), (), {}),
+		'MerchantItemAttributes': ((), (), (), (), {}),
+		'NewReleases': ((), (), ('NewReleases',), ('NewRelease',), {}),
+		'OfferFull': ((), (), (), (), {}),
+		'OfferListings': ((), (), (), (), {}),
+		'Offers': ((), (), (), (), {}),
+		'OfferSummary': ((), (), (), (), {}),
+		'Request': (('Request',), (), (), (), {}),
+		'Reviews': ((), (), (), (), {}),
+		'SalesRank': ((), (), (), (), {}),
+		'SearchBins': ((), (), (), (), {}),
+		'Seller': ((), (), (), (), {}),
+		'SellerListing': ((), (), (), (), {}),
+		'Similarities': ((), (), (), (), {}),
+		'Small': ((), (), (), (), {}),
+		'Subjects': ((), (), (), (), {}),
+		'TopSellers': ((), (), ('TopSellers',), ('TopSeller',), {}),
+		'Tracks': ((), (), (), (), {}),
 		'TransactionDetails': ((), (), ('Transactions', 'TransactionItems', 'Shipments'),
-			('Transaction', 'TransactionItem', 'Shipment')),
-		'VariationMinimum': ((), (), (), ()),
-		'Variations': ((), (), (), ()),
-		'VariationImages': ((), (), (), ()),
-		'VariationSummary':((), (), (), ()) 
+			('Transaction', 'TransactionItem', 'Shipment'), {}),
+		'VariationMinimum': ((), (), (), (), {}),
+		'Variations': ((), (), (), (), {}),
+		'VariationImages': ((), (), (), (), {}),
+		'VariationSummary':((), (), (), (), {}) 
 	}
 	
 	"""
@@ -245,13 +262,19 @@ def __buildPlugins():
 	def mergePlugins(responseGroups, index):
 		#return reduce(lambda x, y: x.update(set(rgps[y][index])), responseGroups, set()) 
 		# this magic reduce does not work, using the primary implementation first.
-		s = set()
-		for x in responseGroups:
-			s.update(set(rgps[x][index]))
+		# CODEDEBT: magic number !
+		if index == 4:
+			s = dict()
+			for x in responseGroups:
+				s.update(rgps[x][index])
+		else:	
+			s = set()
+			for x in responseGroups:
+				s.update(set(rgps[x][index]))
 		return s
 			
 	def unionPlugins(responseGroups):
-		return dict( [ (key, mergePlugins(responseGroups, index)) for index, key in enumerate(['isBypassed', 'isPivoted', 'isCollective', 'isCollected']) ])
+		return dict( [ (key, mergePlugins(responseGroups, index)) for index, key in enumerate(['isBypassed', 'isPivoted', 'isCollective', 'isCollected', 'isPaged']) ])
 
 	return dict( [ (k, unionPlugins(v)) for k, v in orgs.items() ] )
 	
@@ -270,7 +293,6 @@ def rawObject(XMLSearch, arguments, kwItem, plugins=None):
 	dom = XMLSearch(** arguments)
 	return unmarshal(XMLSearch, arguments, dom.getElementsByTagName(kwItem).item(0), plugins) 
 
-
 def rawIterator(XMLSearch, arguments, kwItems, plugins=None):
 	"""Return list of objects from `unmarshal`"""
 	dom = XMLSearch(** arguments)
@@ -281,6 +303,31 @@ class listIterator(list):
 	"""List with extended attributes"""
 	pass
 
+def dict2tuple(d, key):
+	"""Convert dict {key: tuple} to tuple"""
+	items = [key]
+	items += d[key]
+	return items
+
+def pagedWrapper(XMLSearch, arguments, keywords, plugins):
+	"""Wrapper of pagedIterator
+	Parameters:
+
+	- `XMLSearch`: a function, the query to get the DOM
+	- `arguments`: a dictionary, `XMLSearch`'s arguments
+	- `keywords`: a dictionary, {'kwItems': (kwPage, kwTotalResults, pageSize) }
+	- `plugins`: a dictionary, collection of plugged objects
+	
+	Note: it is possible to have more than one pagedIterators
+	in plugins, but only one pagedIterator is returned in
+	pagedWrapper. 
+	"""
+
+	kws = dict2tuple(keywords, keywords.keys()[0])
+
+	return pagedIterator(XMLSearch, arguments, kws,
+		XMLSearch(** arguments).getElementsByTagName(kws[0]).item(0),
+		plugins)
 	
 class pagedIterator:
 	"""
@@ -294,34 +341,33 @@ class pagedIterator:
 	- list slicing is still missing.
 	"""
 
-	def __init__(self, XMLSearch, arguments, kwPage, kwItems, plugins=None, pageSize=10):
+	def __init__(self, XMLSearch, arguments, keywords, element, plugins):
 		"""
 		Initialize a `pagedIterator` object.
 		Parameters:
 
 		- `XMLSearch`: a function, the query to get the DOM
 		- `arguments`: a dictionary, `XMLSearch`'s arguments
-		- `kwPage`: a string, tag name of page
-		- `kwItems`: a string, tag name of items
+		- `keywords`: a tuple, (kwItems, kwPage, kwTotalReuslt, pageSize)
+		- `element`: a DOM element, the root of the collection
 		- `plugins`: a dictionary, collection of plugged objects
-		- `pageSize`: an integer, the amount of items in the page
-	
 		"""
 		self.__search = XMLSearch 
 		self.__arguments = arguments 
-		self.__keywords ={'Page':kwPage, 'Items':kwItems} 
 		self.__plugins = plugins
+		kwItems, kwPage, kwTotalResults, pageSize = keywords
+
+		self.__keywords ={'Items':kwItems, 'Page':kwPage}
 		self.__page = arguments[kwPage] or 1
 		"""Current page"""
 		self.__index = 0
 		"""Current index"""
 		self.__pageSize = pageSize
 
-		dom = self.__search(** self.__arguments)
-		self.__items = unmarshal(XMLSearch, arguments, dom.getElementsByTagName(kwItems).item(0), plugins, listIterator())
+		self.__items = unmarshal(XMLSearch, arguments, element, plugins, listIterator())
 		"""Cached items"""
 		try:
-			self.__len = int(dom.getElementsByTagName("TotalResults").item(0).firstChild.data)
+			self.__len = int(element.getElementsByTagName(kwTotalResults).item(0).firstChild.data)
 		except AttributeError, e:
 			self.__len = len(self.__items)
 
@@ -496,6 +542,8 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 	
 	Parameters:
 
+	- `XMLSearch`: callback function, used when construct pagedIterator
+	- `arguments`: arguments of `XMLSearch`
 	- `element`: DOM object, the DOM element interested in
 	- `plugins`: a dictionary, collection of plugged objects to fine-tune
 	  the object attributes
@@ -515,6 +563,15 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 	- if tagname in plugins['isCollected'] 
 	    this children of elment is appended to grandparent
 	    this object is ignored.
+	- if tagname in plugins['isPaged'].keys():
+	    this pagedIterator is constructed for the object
+	kwItems = keywords.keys()[0]
+	kws = [kwItems]
+	kws += keywords[kwItems]
+
+	CODE DEBT:
+	
+	- Use optimal search for optimization if necessary
 	"""
 
 	if(rc == None):
@@ -538,7 +595,9 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 					setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins, listIterator([])))
 				elif child.tagName in plugins['isCollected']:
 					rc.append(unmarshal(XMLSearch, arguments, child, plugins))
-				else:
+				elif child.tagName in plugins['isPaged'].keys():
+					setattr(rc, key, pagedIterator(XMLSearch, arguments, dict2tuple(plugins['isPaged'], child.tagName), child, plugins))
+	    			else:
 					setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins))
 	else:
 		rc = "".join([e.data for e in element.childNodes if isinstance(e, minidom.Text)])
@@ -555,9 +614,11 @@ def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition
 		'isBypassed': ('Request',), 
 		'isPivoted': ('ItemAttributes',),
 		'isCollective': ('Items',), 
-		'isCollected': ('Item',)
+		'isCollected': ('Item',),
+		'isPaged' : { 'Items': ('OfferPage', 'TotalResults', 10) }
+		
 	}
-	return pagedIterator(XMLItemLookup, argv, 'OfferPage', 'Items', plugins)
+	return pagedWrapper(XMLItemLookup, argv, plugins['isPaged'], plugins)
 
 	
 def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
@@ -575,9 +636,10 @@ def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, P
 		'isBypassed': (), 
 		'isPivoted': ('ItemAttributes',),
 		'isCollective': ('Items',), 
-		'isCollected': ('Item',)
+		'isCollected': ('Item',),
+		'isPaged' : { 'Items': ('ItemPage', 'TotalResults', 10) }
 	}
-	return pagedIterator(XMLItemSearch, argv, "ItemPage", 'Items', plugins)
+	return pagedWrapper(XMLItemSearch, argv, plugins['isPaged'], plugins)
 
 
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -595,7 +657,8 @@ def SimilarityLookup(ItemId, SimilarityType=None, MerchantId=None, Condition=Non
 		'isBypassed': (), 
 		'isPivoted': ('ItemAttributes',),
 		'isCollective': ('Items',),
-		'isCollected': ('Item',)
+		'isCollected': ('Item',),
+		'isPaged': {}
 	}
 	return rawIterator(XMLSimilarityLookup, argv, 'Items', plugins)
 
@@ -617,9 +680,10 @@ def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None,
 		'isBypassed': (), 
 		'isPivoted': ('ItemAttributes',),
 		'isCollective': ('Lists',), 
-		'isCollected': ('List',)
+		'isCollected': ('List',),
+		'isPaged' : { 'Lists': ('ProductPage', 'TotalResults', 10) }
 	}
-	return pagedIterator(XMLListLookup, argv, 'ProductPage', 'Lists', plugins)
+	return pagedWrapper(XMLListLookup, argv, plugins['isPaged'], plugins)
 
 
 def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -637,9 +701,10 @@ def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, C
 		'isBypassed': (), 
 		'isPivoted': ('ItemAttributes',),
 		'isCollective': ('Lists',), 
-		'isCollected': ('List',)
+		'isCollected': ('List',),
+		'isPaged' : { 'Lists': ('ListPage', 'TotalResults', 10) }
 	}
-	return pagedIterator(XMLListSearch, argv, 'ListPage', 'Lists', plugins)
+	return pagedWrapper(XMLListSearch, argv, plugins['isPaged'], plugins)
 
 
 def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
@@ -759,7 +824,8 @@ def __cartOperation(XMLSearch, arguments):
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
 		'isCollective': ('CartItems', 'SavedForLaterItems'),
-		'isCollected': ('CartItem', 'SavedForLaterItem') 
+		'isCollected': ('CartItem', 'SavedForLaterItem'),
+		'isPaged': {}
 	}
 	return rawObject(XMLSearch, arguments, 'Cart', plugins)
 
@@ -773,7 +839,8 @@ def SellerLookup(Sellers, FeedbackPage=None, ResponseGroup=None, AWSAccessKeyId=
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
 		'isCollective': ('Sellers',),
-		'isCollected': ('Seller',)
+		'isCollected': ('Seller',),
+		'isPaged': {}
 	}
 	return rawIterator(XMLSellerLookup, argv, 'Sellers', plugins)
 
@@ -800,7 +867,8 @@ def SellerListingLookup(SellerId, Id, IdType="Listing", ResponseGroup=None, AWSA
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
 		'isCollective': ('SellerListings',), 
-		'isCollected': ('SellerListing',)
+		'isCollected': ('SellerListing',),
+		'isPaged': {}
 	}
 	return rawIterator(XMLSellerListingLookup, argv, "SellerListings", plugins)
 
@@ -820,9 +888,10 @@ def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Offer
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
 		'isCollective': ('SellerListings',), 
-		'isCollected': ('SellerListing',)
+		'isCollected': ('SellerListing',),
+		'isPaged' : { 'SellerListings': ('ListingPage', 'TotalResults', 10) }
 	}
-	return pagedIterator(XMLSellerListingSearch, argv, "ListingPage", "SellerListings", plugins)
+	return pagedWrapper(XMLSellerListingSearch, argv, plugins['isPaged'], plugins)
 
 
 def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None):
@@ -857,9 +926,10 @@ def CustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAcces
 		'isBypassed': ('Request',),
 		'isPivoted': (), 
 		'isCollective': ('Customers',),
-		'isCollected': ('Customer',)
+		'isCollected': ('Customer',),
+
 	}
-	return rawIterator(XMLCustomerContentLookup, argv, 'Customers', plugins)
+	return rawIterator(XMLCustomerContentLookup, argv, 'Customers', __plugins['CustomerContentLookup'])
 
 
 def XMLCustomerContentLookup(CustomerId, ReviewPage=1, ResponseGroup=None, AWSAccessKeyId=None):
@@ -918,6 +988,7 @@ if __name__ == "__main__" :
 
 	s = XMLCustomerContentSearch('Manoj Agrawal')
 	print s.toprettyxml()
-	
-	s = XMLCustomerContentLookup('A2KEKKJ9CAC2KC', ResponseGroup=','.join(['Request', 'CustomerInfo', 'CustomerReviews', 'CustomerLists', 'CustomerFull']))
-	print s.toprettyxml()
+
+	s = CustomerContentLookup('A2QT0KPQU671OU', ResponseGroup=','.join(['Request', 'CustomerFull']))
+	import pdb
+	pdb.set_trace()
