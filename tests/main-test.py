@@ -41,19 +41,6 @@ class QueryTest(unittest.TestCase):
 		except :
 			pass
 
-	def testItemLookup(self):
-		books = ecs.ItemLookup("0596009259")
-		self.assertEqual(len(books), 1)
-		book = books[0]
-		self.assertNotEqual(book, None)
-
-		self.assertEqual(book.ASIN, '0596009259')
-		self.assertEqual(book.Title, 'Programming Python')
-		self.assertEqual(book.Manufacturer, "O'Reilly Media, Inc.")
-		self.assertEqual(book.ProductGroup, 'Book')
-		self.assertEqual(book.Author, 'Mark Lutz')
-
-
 	def testItemSearch(self):
 		books = ecs.ItemSearch("", Title="Python", SearchIndex="Books")
 		self.assert_(len(books) > 200, "We are expect more than 200 books are returned.")

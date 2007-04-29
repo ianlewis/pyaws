@@ -161,25 +161,40 @@ def __buildPlugins():
 	Operation => { 'isByPassed'=>(...), 'isPivoted'=>(...), 
 		'isCollective'=>(...), 'isCollected'=>(...), 
 		isPaged=> { key1: (...), key2: (...), ... }  
-	isPaged is defined as:
-	{ kwItems : (kwPage, kwTotalResults, pageSize) }
-
-	- kwItems: string, the tagname of collection
-	- kwPage: integer, current page
-	- kwTotalResults: integer, the length of collection
-	- pageSize: constant integer, the size of each page
+	"""
 
 	"""
+	ResponseGroups heirachy:
+	Parent => children,
+
+	The benefit of this layer is to reduce the redundency, when
+	the child ResponseGroup change, it propaged to the parent
+	automatically
+	"""
+	rgh = {
+		'CustomerFull': ('CustomerInfo', 'CustomerLists', 'CustomerReviews'), 
+		'Large': ('Accessories', 'BrowseNodes', 'ListmaniaLists', 'Medium', 'Offers', 'Reviews', 'Similarities', 'Tracks'),
+		'ListFull': ('ListInfo', 'ListItems'),
+		'ListInfo': ('ListMinimum', ),
+		'ListItems': ('ListMinimum', ),
+		'Medium': ('EditorialReview', 'Images', 'ItemAttributes', 'OfferSummary', 'Request', 'SalesRank', 'Small'),
+		'OfferFull': ('Offers',),
+		'Offers': ('OfferSummary',),
+		'Variation': ('VariationMinimum', 'VariationSummary')
+	}
 
 	"""
 	ResponseGroup and corresponding plugins:
 	ResponseGroup=>(isBypassed, isPivoted, isCollective, isCollected, isPaged)
-	TODO: Use the following sequence for optimization:
-		isCollective, isCollected, isPaged, isBypassed, isPivoted
 
 	isPaged is defined as:
-		(collective, collected, totalItems, page) 
-		
+	{ kwItems : (kwPage, kwTotalResults, pageSize) }
+
+	- kwItems: string, the tagname of collection
+	- kwPage: string, the tagname of page 
+	- kwTotalResults: string, the tagname of length 
+	- pageSize: constant integer, the size of each page
+
 	"""
 	rgps = {
 		'Accessories': ((), (), (), (), {}), 
@@ -207,7 +222,7 @@ def __buildPlugins():
 		'ListFull': ((), (), (), (), {}),
 		'ListInfo': ((), (), (), (), {}),
 		'ListItems': ((), (), (), (), {}),
-		'ListManiaLists': ((), (), (), (), {}),
+		'ListmaniaLists': ((), (), (), (), {}),
 		'ListMinimum': ((), (), (), (), {}),
 		'Medium': ((), (), (), (), {}),
 		'MerchantItemAttributes': ((), (), (), (), {}),
@@ -223,14 +238,15 @@ def __buildPlugins():
 		'Seller': ((), (), (), (), {}),
 		'SellerListing': ((), (), (), (), {}),
 		'Similarities': ((), (), (), (), {}),
-		'Small': ((), (), (), (), {}),
+		'Small': ((), ('ItemAttributes',), (), ('Item',), 
+			{ 'Items': ('OfferPage', 'TotalResults', 10) }),
 		'Subjects': ((), (), (), (), {}),
 		'TopSellers': ((), (), ('TopSellers',), ('TopSeller',), {}),
 		'Tracks': ((), (), (), (), {}),
 		'TransactionDetails': ((), (), ('Transactions', 'TransactionItems', 'Shipments'),
 			('Transaction', 'TransactionItem', 'Shipment'), {}),
-		'VariationMinimum': ((), (), (), (), {}),
 		'Variations': ((), (), (), (), {}),
+		'VariationMinimum': ((), (), (), (), {}),
 		'VariationImages': ((), (), (), (), {}),
 		'VariationSummary':((), (), (), (), {}) 
 	}
@@ -248,16 +264,25 @@ def __buildPlugins():
 		'CustomerContentLookup': ('Request', 'CustomerInfo', 'CustomerReviews', 'CustomerLists', 'CustomerFull'),
 		'CustomerContentSearch': ('Request', 'CustomerInfo'),
 		'Help': ('Request', 'Help'),
-		'ItemLookup': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListManiaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationImages', 'VariationMinimum', 'Variations', 'VariationSummary'),
-		'ItemSearch': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'ItemAttributes', 'ItemIds', 'Large', 'ListManiaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'SearchBins', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
-		'ListLookup': ('Request', 'ListInfo', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListFull', 'ListItems', 'ListManiaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'ItemLookup': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationImages', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'ItemSearch': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'SearchBins', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'ListLookup': ('Request', 'ListInfo', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListFull', 'ListItems', 'ListmaniaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
 		'ListSearch': ('Request', 'ListInfo', 'ListMinimum'),
 		'SellerListingLookup': ('Request', 'SellerListing'),
 		'SellerListingSearch': ('Request', 'SellerListing'),
 		'SellerLookup': ('Request', 'Seller'),
-		'SimilarityLookup': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListManiaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'SimilarityLookup': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
 		'TransactionLookup':('Request', 'TransactionDetails') 
 	}
+	
+	def collapse(responseGroups):
+		l = []
+		for x in responseGroups:
+			l.append(x)
+			if x in rgh.keys():
+				l.extend( collapse(rgh[x]) )
+		return l
+
 
 	def mergePlugins(responseGroups, index):
 		#return reduce(lambda x, y: x.update(set(rgps[y][index])), responseGroups, set()) 
@@ -265,16 +290,14 @@ def __buildPlugins():
 		# CODEDEBT: magic number !
 		if index == 4:
 			s = dict()
-			for x in responseGroups:
-				s.update(rgps[x][index])
-		else:	
+		else:
 			s = set()
-			for x in responseGroups:
-				s.update(set(rgps[x][index]))
+
+		map(lambda x: s.update(rgps[x][index]), responseGroups)
 		return s
 			
 	def unionPlugins(responseGroups):
-		return dict( [ (key, mergePlugins(responseGroups, index)) for index, key in enumerate(['isBypassed', 'isPivoted', 'isCollective', 'isCollected', 'isPaged']) ])
+		return dict( [ (key, mergePlugins(collapse(responseGroups), index)) for index, key in enumerate(['isBypassed', 'isPivoted', 'isCollective', 'isCollected', 'isPaged']) ])
 
 	return dict( [ (k, unionPlugins(v)) for k, v in orgs.items() ] )
 	
@@ -565,9 +588,6 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 	    this object is ignored.
 	- if tagname in plugins['isPaged'].keys():
 	    this pagedIterator is constructed for the object
-	kwItems = keywords.keys()[0]
-	kws = [kwItems]
-	kws += keywords[kwItems]
 
 	CODE DEBT:
 	
@@ -587,16 +607,16 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 					setattr(rc, key, [getattr(rc, key)])
 				setattr(rc, key, getattr(rc, key) + [unmarshal(XMLSearch, arguments, child, plugins)])
 			elif isinstance(child, minidom.Element):
-				if child.tagName in plugins['isPivoted']:
+				if child.tagName in plugins['isCollected']:
+					rc.append(unmarshal(XMLSearch, arguments, child, plugins))
+				elif child.tagName in plugins['isCollective']:
+					setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins, listIterator([])))
+				elif child.tagName in plugins['isPaged'].keys():
+					setattr(rc, key, pagedIterator(XMLSearch, arguments, dict2tuple(plugins['isPaged'], child.tagName), child, plugins))
+				elif child.tagName in plugins['isPivoted']:
 					unmarshal(XMLSearch, arguments, child, plugins, rc)
 				elif child.tagName in plugins['isBypassed']:
 					continue
-				elif child.tagName in plugins['isCollective']:
-					setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins, listIterator([])))
-				elif child.tagName in plugins['isCollected']:
-					rc.append(unmarshal(XMLSearch, arguments, child, plugins))
-				elif child.tagName in plugins['isPaged'].keys():
-					setattr(rc, key, pagedIterator(XMLSearch, arguments, dict2tuple(plugins['isPaged'], child.tagName), child, plugins))
 	    			else:
 					setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins))
 	else:
@@ -618,7 +638,7 @@ def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition
 		'isPaged' : { 'Items': ('OfferPage', 'TotalResults', 10) }
 		
 	}
-	return pagedWrapper(XMLItemLookup, argv, plugins['isPaged'], plugins)
+	return pagedWrapper(XMLItemLookup, argv, __plugins['ItemLookup']['isPaged'], __plugins['ItemLookup'])
 
 	
 def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
