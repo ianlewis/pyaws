@@ -180,7 +180,7 @@ def __buildPlugins():
 		'Medium': ('EditorialReview', 'Images', 'ItemAttributes', 'OfferSummary', 'Request', 'SalesRank', 'Small'),
 		'OfferFull': ('Offers',),
 		'Offers': ('OfferSummary',),
-		'Variation': ('VariationMinimum', 'VariationSummary')
+		'Variations': ('VariationMinimum', 'VariationSummary')
 	}
 
 	"""
@@ -252,7 +252,7 @@ def __buildPlugins():
 		'TransactionDetails': ((), (), ('Transactions', 'TransactionItems', 'Shipments'),
 			('Transaction', 'TransactionItem', 'Shipment'), {}),
 		'Variations': ((), (), (), (), {}),
-		'VariationMinimum': ((), (), (), (), {}),
+		'VariationMinimum': ((), (), ('Variations',), ('Variation',), {}),
 		'VariationImages': ((), (), (), (), {}),
 		'VariationSummary':((), (), (), (), {}) 
 	}

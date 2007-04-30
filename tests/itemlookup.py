@@ -136,6 +136,31 @@ class ItemLookupTest(unittest.TestCase):
 		self.assertEqual(cd.Disc[13].Track[5], 'Gotterdammerung: Dritter Aufzug, Zweite Szene: Hoiho!')
 		self.assertEqual(cd.Disc[4].Track[3], 'Die Walkure: Zweiter Aufzug, Funfte Szene: Zauberfest bezahmt ein Schlaf der Holden Schmerz und Harm')
 
+	def testVariationMinimum(self):
+		shirts = ecs.ItemLookup('B000EI6M5A', ResponseGroup='VariationMinimum')
+		self.assertEqual(len(shirts), 1)
+		shirt = shirts[0]
+		self.assertEqual(len(shirt.Variations), 17)
+		self.assertEqual(shirt.Variations[0].ASIN, 'B000EG9PLU')
+		self.assertEqual(shirt.Variations[5].ASIN, 'B000EG5DUM')
+
+	def testVariationSummary(self):
+		shirts = ecs.ItemLookup('B000EI6M5A', ResponseGroup='VariationSummary')
+		self.assertEqual(len(shirts), 1)
+		shirt = shirts[0]
+		self.assertEqual(shirt.VariationSummary.HighestPrice.Amount, '699') 
+		self.assertEqual(shirt.VariationSummary.LowestPrice.Amount, '699') 
+
+
+	def testVariations(self):
+		shirts = ecs.ItemLookup('B000EI6M5A', ResponseGroup='Variations')
+		self.assertEqual(len(shirts), 1)
+		shirt = shirts[0]
+		self.assertEqual(len(shirt.Variations), 17)
+		self.assertEqual(shirt.Variations[0].ASIN, 'B000EG9PLU')
+		self.assertEqual(shirt.Variations[5].ASIN, 'B000EG5DUM')
+		self.assertEqual(shirt.VariationSummary.HighestPrice.Amount, '699') 
+		self.assertEqual(shirt.VariationSummary.LowestPrice.Amount, '699') 
 
 
 if __name__ == "__main__" :
