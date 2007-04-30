@@ -89,11 +89,11 @@ class ItemLookupTest(unittest.TestCase):
 		txs = ecs.ItemLookup('B000BI7NHY', MerchantId='All', Condition='All', ResponseGroup='OfferFull')
 		self.assertEqual(len(txs), 1)
 		tx = txs[0]
-		self.assertEqual(len(tx.Offers), 37)
+		self.assertEqual(len(tx.Offers), 36)
 		
 		# arbitary seller
 		self.assertEqual(tx.Offers[14].Seller.Nickname, 'ravitnus')
-		self.assertEqual(tx.Offers[23].Merchant.MerchantId, 'A2PNJAWEOU5BXV')
+		self.assertEqual(tx.Offers[23].Merchant.MerchantId, 'A16KASCB556RBK')
 
 
 	def testReviews(self):
@@ -105,6 +105,36 @@ class ItemLookupTest(unittest.TestCase):
 		# arbitary reviewer
 		self.assertEqual(book.CustomerReviews[34].Reviewer.Name, 'Sameer')
 		self.assertEqual(book.CustomerReviews[12].Summary, 'An Essential Python Book for Python Programmers')
+
+
+	def testSimilarities(self):
+		books = ecs.ItemLookup(self.ItemId, ResponseGroup='Similarities')
+		self.assertEqual(len(books), 1)
+		book = books[0]
+
+		sim = book.SimilarProducts;
+		self.assertEqual(len(sim), 5)
+		self.assertEqual(sim[0].Title, 'Learning Python, Second Edition')
+		self.assertEqual(sim[1].Title, 'Python Cookbook')
+		self.assertEqual(sim[3].Title, "Python Essential Reference (3rd Edition) (Developer's Library)")
+
+	def testSubjects(self):
+		books = ecs.ItemLookup(self.ItemId, ResponseGroup='Subjects')
+		self.assertEqual(len(books), 1)
+		book = books[0]
+
+		subs = book.Subjects;
+		self.assertEqual(len(subs), 10)
+		self.assertEqual(subs[0], 'Programming languages')
+		self.assertEqual(subs[2], 'Computers')
+
+	def testTracks(self):
+		cds = ecs.ItemLookup('B0000042H4', ResponseGroup='Tracks')
+		self.assertEqual(len(cds), 1)
+		cd = cds[0].Tracks
+		self.assertEqual(len(cd.Disc), 14)
+		self.assertEqual(cd.Disc[13].Track[5], 'Gotterdammerung: Dritter Aufzug, Zweite Szene: Hoiho!')
+		self.assertEqual(cd.Disc[4].Track[3], 'Die Walkure: Zweiter Aufzug, Funfte Szene: Zauberfest bezahmt ein Schlaf der Holden Schmerz und Harm')
 
 
 

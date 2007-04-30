@@ -243,10 +243,10 @@ def __buildPlugins():
 		'SearchBins': ((), (), (), (), {}),
 		'Seller': ((), (), (), (), {}),
 		'SellerListing': ((), (), (), (), {}),
-		'Similarities': ((), (), (), (), {}),
+		'Similarities': ((), (), ('SimilarProducts',), ('SimilarProduct',), {}),
 		'Small': ((), ('ItemAttributes',), (), ('Item',), 
 			{'Items': ('OfferPage', 'TotalResults', 10) }),
-		'Subjects': ((), (), (), (), {}),
+		'Subjects': ((), (), ('Subjects',), ('Subject',), {}),
 		'TopSellers': ((), (), ('TopSellers',), ('TopSeller',), {}),
 		'Tracks': ((), (), (), (), {}),
 		'TransactionDetails': ((), (), ('Transactions', 'TransactionItems', 'Shipments'),
@@ -315,6 +315,7 @@ class Bag :
 	"""A generic container for the python objects"""
 	def __repr__(self):
 		return '<Bag instance: ' + self.__dict__.__repr__() + '>'
+	
 
 
 def rawObject(XMLSearch, arguments, kwItem, plugins=None):
@@ -595,15 +596,16 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 
 	if(rc == None):
 		rc = Bag()
-
+	
 	childElements = [e for e in element.childNodes if isinstance(e, minidom.Element)]
 
 	if childElements:
 		for child in childElements:
 			key = child.tagName
 			if hasattr(rc, key):
-				if type(getattr(rc, key)) <> type([]):
-					setattr(rc, key, [getattr(rc, key)])
+				attr = getattr(rc, key)
+				if type(attr) <> type([]):
+					setattr(rc, key, [attr])
 				setattr(rc, key, getattr(rc, key) + [unmarshal(XMLSearch, arguments, child, plugins)])
 			elif isinstance(child, minidom.Element):
 				if child.tagName in plugins['isCollected']:
@@ -998,11 +1000,8 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-	obj = BrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
-
-	s = XMLCustomerContentSearch('Manoj Agrawal')
-	print s.toprettyxml()
-
-	s = CustomerContentLookup('A2QT0KPQU671OU', ResponseGroup=','.join(['Request', 'CustomerFull']))
-	import pdb
-	pdb.set_trace()
+	dom = XMLItemLookup('B0000042H4', ResponseGroup='Tracks')
+	print dom.toprettyxml()
+	cds = ItemLookup('B0000042H4', ResponseGroup='Tracks')
+	self.assertEqual(len(cds), 1)
+	cd = cds[0]
