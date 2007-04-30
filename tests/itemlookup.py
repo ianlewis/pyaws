@@ -89,18 +89,23 @@ class ItemLookupTest(unittest.TestCase):
 		txs = ecs.ItemLookup('B000BI7NHY', MerchantId='All', Condition='All', ResponseGroup='OfferFull')
 		self.assertEqual(len(txs), 1)
 		tx = txs[0]
-		self.assertEqual(len(tx.Offers), 38)
+		self.assertEqual(len(tx.Offers), 37)
 		
 		# arbitary seller
-		self.assertEqual(tx.Offers[14].Seller.Nickname, 'tfitag') 
-		self.assertEqual(tx.Offers[23].Merchant.Name, 'Technology Galaxy')
+		self.assertEqual(tx.Offers[14].Seller.Nickname, 'ravitnus')
+		self.assertEqual(tx.Offers[23].Merchant.MerchantId, 'A2PNJAWEOU5BXV')
 
 
 	def testReviews(self):
 		books = ecs.ItemLookup(self.ItemId, ResponseGroup='Reviews')
 		self.assertEqual(len(books), 1)
 		book = books[0]
-		pdb.set_trace()
+		self.assertEqual(len(book.CustomerReviews), 68)
+
+		# arbitary reviewer
+		self.assertEqual(book.CustomerReviews[34].Reviewer.Name, 'Sameer')
+		self.assertEqual(book.CustomerReviews[12].Summary, 'An Essential Python Book for Python Programmers')
+
 
 
 if __name__ == "__main__" :

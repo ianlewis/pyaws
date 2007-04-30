@@ -237,14 +237,15 @@ def __buildPlugins():
 		'Offers': ((), (), (), ('Offer',), {'Offers': ('OfferPage', 'TotalOffers', 10)}),
 		'OfferSummary': ((), (), (), (), {}),
 		'Request': (('Request',), (), (), (), {}),
-		'Reviews': ((), (), (), (), {}),
+		'Reviews': ((), (), (),('Review',), 
+			{'CustomerReviews': ('ReviewPage', 'TotalReviews', 10)}),
 		'SalesRank': ((), (), (), (), {}),
 		'SearchBins': ((), (), (), (), {}),
 		'Seller': ((), (), (), (), {}),
 		'SellerListing': ((), (), (), (), {}),
 		'Similarities': ((), (), (), (), {}),
 		'Small': ((), ('ItemAttributes',), (), ('Item',), 
-			{ 'Items': ('OfferPage', 'TotalResults', 10) }),
+			{'Items': ('OfferPage', 'TotalResults', 10) }),
 		'Subjects': ((), (), (), (), {}),
 		'TopSellers': ((), (), ('TopSellers',), ('TopSeller',), {}),
 		'Tracks': ((), (), (), (), {}),
@@ -331,11 +332,6 @@ class listIterator(list):
 	"""List with extended attributes"""
 	pass
 
-def dict2tuple(d, key):
-	"""Convert dict {key: tuple} to tuple"""
-	items = [key]
-	items += d[key]
-	return items
 
 def pagedWrapper(XMLSearch, arguments, keywords, plugins):
 	"""Wrapper of pagedIterator
@@ -343,7 +339,7 @@ def pagedWrapper(XMLSearch, arguments, keywords, plugins):
 
 	- `XMLSearch`: a function, the query to get the DOM
 	- `arguments`: a dictionary, `XMLSearch`'s arguments
-	- `keywords`: a dictionary, {'kwItems': (kwPage, kwTotalResults, pageSize) }
+	- `keywords`: a tuple, (kwItems, (kwPage, kwTotalResults, pageSize) )
 	- `plugins`: a dictionary, collection of plugged objects
 	
 	Note: it is possible to have more than one pagedIterators
@@ -351,10 +347,8 @@ def pagedWrapper(XMLSearch, arguments, keywords, plugins):
 	pagedWrapper. 
 	"""
 
-	kws = dict2tuple(keywords, keywords.keys()[0])
-
-	return pagedIterator(XMLSearch, arguments, kws,
-		XMLSearch(** arguments).getElementsByTagName(kws[0]).item(0),
+	return pagedIterator(XMLSearch, arguments, keywords,
+		XMLSearch(** arguments).getElementsByTagName(keywords[0]).item(0),
 		plugins)
 	
 class pagedIterator:
@@ -376,15 +370,15 @@ class pagedIterator:
 
 		- `XMLSearch`: a function, the query to get the DOM
 		- `arguments`: a dictionary, `XMLSearch`'s arguments
-		- `keywords`: a tuple, (kwItems, kwPage, kwTotalReuslt, pageSize)
+		- `keywords`: a tuple, (kwItems, (kwPage, kwTotalResults, pageSize) )
 		- `element`: a DOM element, the root of the collection
 		- `plugins`: a dictionary, collection of plugged objects
 		"""
+		kwItems, (kwPage, kwTotalResults, pageSize) = keywords
+
 		self.__search = XMLSearch 
 		self.__arguments = arguments 
 		self.__plugins = plugins
-		kwItems, kwPage, kwTotalResults, pageSize = keywords
-
 		self.__keywords ={'Items':kwItems, 'Page':kwPage}
 		self.__page = arguments[kwPage] or 1
 		"""Current page"""
@@ -617,7 +611,7 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 				elif child.tagName in plugins['isCollective']:
 					setattr(rc, key, unmarshal(XMLSearch, arguments, child, plugins, listIterator([])))
 				elif child.tagName in plugins['isPaged'].keys():
-					setattr(rc, key, pagedIterator(XMLSearch, arguments, dict2tuple(plugins['isPaged'], child.tagName), child, plugins))
+					setattr(rc, key, pagedIterator(XMLSearch, arguments, (child.tagName, plugins['isPaged'][child.tagName]), child, plugins))
 				elif child.tagName in plugins['isPivoted']:
 					unmarshal(XMLSearch, arguments, child, plugins, rc)
 				elif child.tagName in plugins['isBypassed']:
@@ -634,16 +628,8 @@ def unmarshal(XMLSearch, arguments, element, plugins=None, rc=None):
 
 def ItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
 	'''ItemLookup in ECS'''
-	argv = vars()
-	plugins = {
-		'isBypassed': ('Request',), 
-		'isPivoted': ('ItemAttributes',),
-		'isCollective': ('Items',), 
-		'isCollected': ('Item',),
-		'isPaged' : { 'Items': ('OfferPage', 'TotalResults', 10) }
-		
-	}
-	return pagedWrapper(XMLItemLookup, argv, __plugins['ItemLookup']['isPaged'], __plugins['ItemLookup'])
+	return pagedWrapper(XMLItemLookup, vars(), 
+		('Items', __plugins['ItemLookup']['isPaged']['Items']), __plugins['ItemLookup'])
 
 	
 def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condition=None, DeliveryMethod=None, ISPUPostalCode=None, OfferPage=None, ReviewPage=None, ReviewSort=None, VariationPage=None, ResponseGroup=None, AWSAccessKeyId=None): 
@@ -664,7 +650,8 @@ def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, P
 		'isCollected': ('Item',),
 		'isPaged' : { 'Items': ('ItemPage', 'TotalResults', 10) }
 	}
-	return pagedWrapper(XMLItemSearch, argv, plugins['isPaged'], plugins)
+	return pagedWrapper(XMLItemSearch, argv, 
+		('Items', plugins['isPaged']['Items']), plugins)
 
 
 def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -708,7 +695,8 @@ def ListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None,
 		'isCollected': ('List',),
 		'isPaged' : { 'Lists': ('ProductPage', 'TotalResults', 10) }
 	}
-	return pagedWrapper(XMLListLookup, argv, plugins['isPaged'], plugins)
+	return pagedWrapper(XMLListLookup, argv, 
+		('Lists', plugins['isPaged']['Lists']), plugins)
 
 
 def XMLListLookup(ListType, ListId, ProductPage=None, ProductGroup=None, Sort=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
@@ -729,7 +717,8 @@ def ListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, C
 		'isCollected': ('List',),
 		'isPaged' : { 'Lists': ('ListPage', 'TotalResults', 10) }
 	}
-	return pagedWrapper(XMLListSearch, argv, plugins['isPaged'], plugins)
+	return pagedWrapper(XMLListSearch, argv, 
+		('Lists', plugins['isPaged']['Lists']), plugins)
 
 
 def XMLListSearch(ListType, Name=None, FirstName=None, LastName=None, Email=None, City=None, State=None, ListPage=None, ResponseGroup=None, AWSAccessKeyId=None):
@@ -916,7 +905,8 @@ def SellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, Offer
 		'isCollected': ('SellerListing',),
 		'isPaged' : { 'SellerListings': ('ListingPage', 'TotalResults', 10) }
 	}
-	return pagedWrapper(XMLSellerListingSearch, argv, plugins['isPaged'], plugins)
+	return pagedWrapper(XMLSellerListingSearch, argv, 
+		('SellerListings', plugins['isPaged']['SellerListings']), plugins)
 
 
 def XMLSellerListingSearch(SellerId, Title=None, Sort=None, ListingPage=None, OfferStatus=None, ResponseGroup=None, AWSAccessKeyId=None):
@@ -1007,7 +997,6 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 
 if __name__ == "__main__" :
-	import pdb
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
 	obj = BrowseNodeLookup("1065852", ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
 
