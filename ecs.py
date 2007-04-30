@@ -195,12 +195,17 @@ def __buildPlugins():
 	- kwTotalResults: string, the tagname of length 
 	- pageSize: constant integer, the size of each page
 
+	CODE DEBT: 
+	
+	- Do we need to remove the ResponseGroup in rgh.keys()? At least, Medium does not
+	introduce any new attributes.
+
 	"""
 	rgps = {
-		'Accessories': ((), (), (), (), {}), 
+		'Accessories': ((), (), ('Accessories',), ('Accessory',), {}), 
 		'AlternateVersions': ((), (), (), (), {}), 
 		'BrowseNodeInfo': ((), (), ('Children', 'Ancestors'), ('BrowseNode',), {}),
-		'BrowseNodes': ((), (), (), (), {}),
+		'BrowseNodes': ((), (), ('Children', 'Ancestors', 'BrowseNodes'), ('BrowseNode',), {}),
 		'Cart': ((), (), (), (), {}),
 		'CartNewReleases': ((), (), (), (), {}),
 		'CartTopSellers': ((), (), (), (), {}),
@@ -211,25 +216,25 @@ def __buildPlugins():
 		'CustomerLists': ((), (), ('Customers',), ('Customer',), {}),
 		'CustomerReviews': ((), (), ('Customers',),('Customer', 'Review'), 
 			{'CustomerReviews': ('ReviewPage', 'TotalReviews', 10)}),
-		'EditorialReview': ((), (), (), (), {}),
+		'EditorialReview': ((), (), ('EditorialReviews',), ('EditorialReview',), {}),
 		'Help': ((), (), ('RequiredParameters', 'AvailableParameters',
 			'DefaultResponseGroups', 'AvailableResponseGroups'),
 			 ('Parameter', 'ResponseGroup'), {}),
-		'Images': ((), (), (), (), {}),
-		'ItemAttributes': ((), (), (), (), {}),
+		'Images': ((), (), ('ImageSets',), ('ImageSet',), {}),
+		'ItemAttributes': ((), ('ItemAttributes',), (), (), {}),
 		'ItemIds': ((), (), (), (), {}),
 		'Large': ((), (), (), (), {}),
 		'ListFull': ((), (), (), (), {}),
 		'ListInfo': ((), (), (), (), {}),
 		'ListItems': ((), (), (), (), {}),
-		'ListmaniaLists': ((), (), (), (), {}),
+		'ListmaniaLists': ((), (), ('ListmaniaLists', ), ('ListmaniaList',), {}),
 		'ListMinimum': ((), (), (), (), {}),
 		'Medium': ((), (), (), (), {}),
 		'MerchantItemAttributes': ((), (), (), (), {}),
 		'NewReleases': ((), (), ('NewReleases',), ('NewRelease',), {}),
 		'OfferFull': ((), (), (), (), {}),
 		'OfferListings': ((), (), (), (), {}),
-		'Offers': ((), (), (), (), {}),
+		'Offers': ((), (), (), ('Offer',), {'Offers': ('OfferPage', 'TotalOffers', 10)}),
 		'OfferSummary': ((), (), (), (), {}),
 		'Request': (('Request',), (), (), (), {}),
 		'Reviews': ((), (), (), (), {}),
