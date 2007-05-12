@@ -223,6 +223,10 @@ def __buildPlugins():
 		'Images': ((), (), ('ImageSets',), ('ImageSet',), {}),
 		'ItemAttributes': ((), ('ItemAttributes',), (), (), {}),
 		'ItemIds': ((), (), (), (), {}),
+		'ItemLookup.Small': ((), ('ItemAttributes',), (), ('Item',), 
+			{'Items': ('OfferPage', 'TotalResults', 10) }),
+		'ItemSearch.Small': ((), ('ItemAttributes',), (), ('Item',), 
+			{'Items': ('ItemPage', 'TotalResults', 10) }),
 		'Large': ((), (), (), (), {}),
 		'ListFull': ((), (), (), (), {}),
 		'ListInfo': ((), (), (), (), {}),
@@ -240,12 +244,11 @@ def __buildPlugins():
 		'Reviews': ((), (), (),('Review',), 
 			{'CustomerReviews': ('ReviewPage', 'TotalReviews', 10)}),
 		'SalesRank': ((), (), (), (), {}),
-		'SearchBins': ((), (), (), (), {}),
+		'SearchBins': ((), (), ('SearchBinSets',), ('SearchBinSet',), {}),
 		'Seller': ((), (), (), (), {}),
 		'SellerListing': ((), (), (), (), {}),
 		'Similarities': ((), (), ('SimilarProducts',), ('SimilarProduct',), {}),
-		'Small': ((), ('ItemAttributes',), (), ('Item',), 
-			{'Items': ('OfferPage', 'TotalResults', 10) }),
+		'Small': ((), (), (), (), {}),
 		'Subjects': ((), (), ('Subjects',), ('Subject',), {}),
 		'TopSellers': ((), (), ('TopSellers',), ('TopSeller',), {}),
 		'Tracks': ((), (), (), (), {}),
@@ -270,8 +273,8 @@ def __buildPlugins():
 		'CustomerContentLookup': ('Request', 'CustomerInfo', 'CustomerReviews', 'CustomerLists', 'CustomerFull'),
 		'CustomerContentSearch': ('Request', 'CustomerInfo'),
 		'Help': ('Request', 'Help'),
-		'ItemLookup': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationImages', 'VariationMinimum', 'Variations', 'VariationSummary'),
-		'ItemSearch': ('Request', 'Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'SearchBins', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'ItemLookup': ('Request', 'ItemLookup.Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationImages', 'VariationMinimum', 'Variations', 'VariationSummary'),
+		'ItemSearch': ('Request', 'ItemSearch.Small', 'Accessories', 'BrowseNodes', 'EditorialReview', 'ItemAttributes', 'ItemIds', 'Large', 'ListmaniaLists', 'Medium', 'MerchantItemAttributes', 'OfferFull', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'SearchBins', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
 		'ListLookup': ('Request', 'ListInfo', 'Accessories', 'BrowseNodes', 'EditorialReview', 'Images', 'ItemAttributes', 'ItemIds', 'Large', 'ListFull', 'ListItems', 'ListmaniaLists', 'Medium', 'Offers', 'OfferSummary', 'Reviews', 'SalesRank', 'Similarities', 'Subjects', 'Tracks', 'VariationMinimum', 'Variations', 'VariationSummary'),
 		'ListSearch': ('Request', 'ListInfo', 'ListMinimum'),
 		'SellerListingLookup': ('Request', 'SellerListing'),
@@ -382,6 +385,7 @@ class pagedIterator:
 		self.__plugins = plugins
 		self.__keywords ={'Items':kwItems, 'Page':kwPage}
 		self.__page = arguments[kwPage] or 1
+			
 		"""Current page"""
 		self.__index = 0
 		"""Current index"""
@@ -641,22 +645,14 @@ def XMLItemLookup(ItemId, IdType=None, SearchIndex=None, MerchantId=None, Condit
 	return query(buildRequest(vars()))
 
 
-def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
+def ItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, OfferPage=None, ReviewPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	'''ItemSearch in ECS'''
 
-	argv = vars()
-	plugins = {
-		'isBypassed': (), 
-		'isPivoted': ('ItemAttributes',),
-		'isCollective': ('Items',), 
-		'isCollected': ('Item',),
-		'isPaged' : { 'Items': ('ItemPage', 'TotalResults', 10) }
-	}
-	return pagedWrapper(XMLItemSearch, argv, 
-		('Items', plugins['isPaged']['Items']), plugins)
+	return pagedWrapper(XMLItemSearch, vars(), 
+		('Items', __plugins['ItemSearch']['isPaged']['Items']), __plugins['ItemSearch'])
 
 
-def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
+def XMLItemSearch(Keywords, SearchIndex="Blended", Availability=None, Title=None, Power=None, BrowseNode=None, Artist=None, Author=None, Actor=None, Director=None, AudienceRating=None, Manufacturer=None, MusicLabel=None, Composer=None, Publisher=None, Brand=None, Conductor=None, Orchestra=None, TextStream=None, ItemPage=None, OfferPage=None, ReviewPage=None, Sort=None, City=None, Cuisine=None, Neighborhood=None, MinimumPrice=None, MaximumPrice=None, MerchantId=None, Condition=None, DeliveryMethod=None, ResponseGroup=None, AWSAccessKeyId=None):  
 	'''DOM representation of ItemSearch in ECS'''
 
 	Operation = "ItemSearch"
@@ -1000,8 +996,6 @@ def XMLTransactionLookup(TransactionId, ResponseGroup=None, AWSAccessKeyId=None)
 
 if __name__ == "__main__" :
 	setLicenseKey("1MGVS72Y8JF7EC7JDZG2")
-	dom = XMLItemLookup('B0000042H4', ResponseGroup='Tracks')
-	print dom.toprettyxml()
-	cds = ItemLookup('B0000042H4', ResponseGroup='Tracks')
-	self.assertEqual(len(cds), 1)
-	cd = cds[0]
+	ItemSearch('XML Python', SearchIndex='Books', MerchantId='All', ResponseGroup='OfferFull')
+	import pdb
+	pdb.set_trace()

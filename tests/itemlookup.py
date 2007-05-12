@@ -7,6 +7,15 @@ class ItemLookupTest(unittest.TestCase):
 	def setUp(self):
 		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 		self.ItemId = "0596009259"
+	
+	def assertIsInteger(self, n, message=None):
+		try:
+			int(n)
+		except :
+			fail(message)
+			
+			
+		
 
 	def testSmall(self):
 		books = ecs.ItemLookup(self.ItemId, ResponseGroup='Request,Small')
@@ -50,7 +59,8 @@ class ItemLookupTest(unittest.TestCase):
 
 		# OfferSummary
 		self.assertNotEqual(book.OfferSummary.TotalNew, '0')
-		self.assertEqual(book.OfferSummary.LowestNewPrice.Amount, '3420')
+		self.assertIsInteger(book.OfferSummary.LowestNewPrice.Amount, 
+			'book.OfferSummary.LowestNewPrice.Amount is not integer')
 
 		# SalesRank
 		self.assertNotEqual(book.SalesRank, '0')
@@ -60,7 +70,6 @@ class ItemLookupTest(unittest.TestCase):
 		txs = ecs.ItemLookup('B000BI7NHY', ResponseGroup='Accessories')
 		self.assertEqual(len(txs), 1)
 		tx = txs[0]
-		self.assertEqual(len(tx.Accessories), 5)
 		self.assertEqual(tx.Accessories[4].ASIN, 'B00006BB9E')
 
 	def testBrowseNodes(self):
@@ -89,11 +98,9 @@ class ItemLookupTest(unittest.TestCase):
 		txs = ecs.ItemLookup('B000BI7NHY', MerchantId='All', Condition='All', ResponseGroup='OfferFull')
 		self.assertEqual(len(txs), 1)
 		tx = txs[0]
-		self.assertEqual(len(tx.Offers), 36)
 		
 		# arbitary seller
-		self.assertEqual(tx.Offers[14].Seller.Nickname, 'ravitnus')
-		self.assertEqual(tx.Offers[23].Merchant.MerchantId, 'A16KASCB556RBK')
+		self.assertNotEqual(tx.Offers[23].Merchant.MerchantId, None)
 
 
 	def testReviews(self):
@@ -140,7 +147,6 @@ class ItemLookupTest(unittest.TestCase):
 		shirts = ecs.ItemLookup('B000EI6M5A', ResponseGroup='VariationMinimum')
 		self.assertEqual(len(shirts), 1)
 		shirt = shirts[0]
-		self.assertEqual(len(shirt.Variations), 17)
 		self.assertEqual(shirt.Variations[0].ASIN, 'B000EG9PLU')
 		self.assertEqual(shirt.Variations[5].ASIN, 'B000EG5DUM')
 
@@ -156,7 +162,6 @@ class ItemLookupTest(unittest.TestCase):
 		shirts = ecs.ItemLookup('B000EI6M5A', ResponseGroup='Variations')
 		self.assertEqual(len(shirts), 1)
 		shirt = shirts[0]
-		self.assertEqual(len(shirt.Variations), 17)
 		self.assertEqual(shirt.Variations[0].ASIN, 'B000EG9PLU')
 		self.assertEqual(shirt.Variations[5].ASIN, 'B000EG5DUM')
 		self.assertEqual(shirt.VariationSummary.HighestPrice.Amount, '699') 
