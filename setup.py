@@ -17,7 +17,7 @@ setup(name='pyaws',
 	url='http://pyaws.sourceforge.net',
 	license='Python Software Foundation License',
 	platforms='OS Independent',
-	download_url='http://prdownloads.sourceforge.net/pyaws/pyaws-0.1.0.tar.gz?download',
+	download_url='http://prdownloads.sourceforge.net/pyaws/pyaws-0.2.0.tar.gz?download',
 	classifiers=[
 		'Development Status :: 2 - Pre-Alpha',
 		'Environment :: Web Environment',
@@ -25,6 +25,6 @@ setup(name='pyaws',
 		'License :: OSI Approved :: Python Software Foundation License',
 		'Operating System :: OS Independent',
 		'Programming Language :: Python',
-		'Topic :: WWW/HTTP',
+		'Topic :: Internet :: WWW/HTTP',
           ]
 )
