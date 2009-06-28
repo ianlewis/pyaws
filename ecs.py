@@ -16,6 +16,7 @@ Exception classes:
 
 - `AWSException`
 - `NoLicenseKey`
+- `NoSecretAccessKey`
 - `BadLocale`
 - `BadOption`
 - `ExactParameterRequirement`
@@ -117,6 +118,7 @@ How To Use This Module
    c) setup the locale if your locale is not ``us``
 
 4. Send query to the AWS, and manupilate the returned python object.
+
 """
 
 __author__ = "Kun Xi < kunxi@kunxi.org >"
@@ -125,12 +127,14 @@ __license__ = "Python Software Foundation"
 __docformat__ = 'restructuredtext'
 
 
-import os, urllib, string
+import os, urllib, string, hmac, hashlib
+from datetime import datetime
 from xml.dom import minidom
 
 
 # Package-wide variables:
-LICENSE_KEY = None;
+LICENSE_KEY = None
+SECRET_ACCESS_KEY = None
 LOCALE = "us"
 VERSION = "2007-04-04"
 OPTIONS = {}
@@ -150,6 +154,12 @@ __licenseKeys = (
     (lambda key: key),
     (lambda key: LICENSE_KEY), 
     (lambda key: os.environ.get('AWS_LICENSE_KEY', None))
+   )
+
+__secretAccessKeys = (
+    (lambda key: key),
+    (lambda key: SECRET_ACCESS_KEY), 
+    (lambda key: os.environ.get('AWS_SECRET_ACCESS_KEY', None))
    )
 
 
@@ -430,6 +440,7 @@ class pagedIterator:
 # Exception classes
 class AWSException(Exception) : pass
 class NoLicenseKey(AWSException) : pass
+class NoSecretAccessKey(AWSException) : pass
 class BadLocale(AWSException) : pass
 class BadOption(AWSException): pass
 # Runtime exception
@@ -499,6 +510,27 @@ def getLicenseKey():
         setLicenseKey()
     return LICENSE_KEY
 
+def setSecretAccessKey(secret_access_key=None):
+    """Sets your secret AWS key.
+    If secret_access_key is not specified, we look for the 
+    environment variable: AMAZON_SECRET_ACCESS_KEY.  
+    Raises NoSecretAccessKey if we can't get it to work."""
+    
+    global SECRET_ACCESS_KEY
+    for get in __secretAccessKeys:
+        rc = get(secret_access_key)
+        if rc: 
+            SECRET_ACCESS_KEY = rc;
+            return;
+    raise NoSecretAccessKey, ("Please get your secret key from  http://www.amazon.com/webservices")
+
+def getSecretAccessKey():
+    """Get the secret access key.
+    If no key is specified,  NoSecretAccessKey is raised."""
+
+    if not SECRET_ACCESS_KEY:
+        setSecretAccessKey()
+    return SECRET_ACCESS_KEY
 
 def getVersion():
     """Get the version of ECS specification"""
@@ -525,16 +557,35 @@ def getOptions():
     """Get options"""
     return OPTIONS 
 
+def buildSignature(netloc,query_string):
+    secret_key = getSecretAccessKey()
+    string_to_sign = 'GET\n%s\n%s\n%s' % (netloc,'/onca/xml',query_string)
+    
+    return urllib.quote_plus(hmac.new(secret_key,string_to_sign,hashlib.sha256).digest().encode('base64').strip())
+
+def buildQuery(argv):
+    # 1. Filter any key set to 'None'
+    # 2. Sort the dict by key
+    # 3. Quote everything and build the query string
+    query_string = urllib.urlencode([(k, argv[k]) for (k) in sorted(argv.keys()) if argv[k]])
+
+    netloc = __supportedLocales[getLocale()]
+    signature = buildSignature(netloc, query_string)
+    url = 'http://' + netloc + '/onca/xml?' + query_string + '&Signature=' + signature
+    return url
 
 def buildRequest(argv):
-    """Build the REST request URL from argv."""
+    """Adds some standard keys (like Timestamp and Version) to the request,
+    then builds and returns the request-url."""
 
-    url = "http://" + __supportedLocales[getLocale()] + "/onca/xml?Service=AWSECommerceService&" + 'Version=%s&' % VERSION
     if not argv['AWSAccessKeyId']:
         argv['AWSAccessKeyId'] = getLicenseKey()
     argv.update(getOptions())
-    return url + '&'.join(['%s=%s' % (k,urllib.quote(str(v))) for (k,v) in argv.items() if v]) 
+    argv.update({'Service':'AWSECommerceService',
+                 'Timestamp':datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                 'Version':VERSION})
 
+    return buildQuery(argv)
 
 def buildException(els):
     """Build the exception from the returned DOM node
