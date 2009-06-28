@@ -118,6 +118,7 @@ How To Use This Module
    c) setup the locale if your locale is not ``us``
 
 4. Send query to the AWS, and manupilate the returned python object.
+
 """
 
 __author__ = "Kun Xi < kunxi@kunxi.org >"
@@ -562,27 +563,29 @@ def buildSignature(netloc,query_string):
     
     return urllib.quote_plus(hmac.new(secret_key,string_to_sign,hashlib.sha256).digest().encode('base64').strip())
 
+def buildQuery(argv):
+    # 1. Filter any key set to 'None'
+    # 2. Sort the dict by key
+    # 3. Quote everything and build the query string
+    query_string = urllib.urlencode([(k, argv[k]) for (k) in sorted(argv.keys()) if argv[k]])
+
+    netloc = __supportedLocales[getLocale()]
+    signature = buildSignature(netloc, query_string)
+    url = 'http://' + netloc + '/onca/xml?' + query_string + '&Signature=' + signature
+    return url
+
 def buildRequest(argv):
-    """Build the REST request URL from argv."""
+    """Adds some standard keys (like Timestamp and Version) to the request,
+    then builds and returns the request-url."""
 
     if not argv['AWSAccessKeyId']:
         argv['AWSAccessKeyId'] = getLicenseKey()
     argv.update(getOptions())
-    argv['Service'] = 'AWSECommerceService'
-    if 'Timestamp' not in argv:
-        argv['Timestamp'] = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ') 
-    argv['Version'] = VERSION
+    argv.update({'Service':'AWSECommerceService',
+                 'Timestamp':datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                 'Version':VERSION})
 
-    # 1. Filter any key set to 'None'
-    # 2. Sort the dict by key
-    # 3. Quote everything and build the query string 
-    query_string = urllib.urlencode([(k,argv[k]) for (k) in sorted(argv.keys()) if argv[k]])
-
-    netloc = __supportedLocales[getLocale()]
-    
-    signature = buildSignature(netloc, query_string)
-    url = 'http://' + netloc + '/onca/xml?' + query_string + '&Signature=' + signature
-    return url
+    return buildQuery(argv)
 
 def buildException(els):
     """Build the exception from the returned DOM node
