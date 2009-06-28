@@ -571,8 +571,7 @@ def buildQuery(argv):
 
     netloc = __supportedLocales[getLocale()]
     signature = buildSignature(netloc, query_string)
-    url = 'http://' + netloc + '/onca/xml?' + query_string + '&Signature=' + signature
-    return url
+    return 'http://' + netloc + '/onca/xml?' + query_string + '&Signature=' + signature
 
 def buildRequest(argv):
     """Adds some standard keys (like Timestamp and Version) to the request,
