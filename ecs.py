@@ -136,7 +136,7 @@ from xml.dom import minidom
 LICENSE_KEY = None
 SECRET_ACCESS_KEY = None
 LOCALE = "us"
-VERSION = "2007-04-04"
+VERSION = "2009-06-01"
 OPTIONS = {}
 
 
