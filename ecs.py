@@ -144,10 +144,10 @@ __supportedLocales = {
         None : "ecs.amazonaws.com",  
         "us" : "ecs.amazonaws.com",  
         "uk" : "ecs.amazonaws.co.uk", 
-        "de" : "ecs.amazonaws.co.de", 
-        "jp" : "ecs.amazonaws.co.jp", 
-        "fr" : "ecs.amazonaws.co.fr", 
-        "ca" : "ecs.amazonaws.co.ca", 
+        "de" : "ecs.amazonaws.de", 
+        "jp" : "ecs.amazonaws.jp", 
+        "fr" : "ecs.amazonaws.fr", 
+        "ca" : "ecs.amazonaws.ca", 
     }
 
 __licenseKeys = (
