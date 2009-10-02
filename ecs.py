@@ -567,7 +567,7 @@ def buildQuery(argv):
     # 1. Filter any key set to 'None'
     # 2. Sort the dict by key
     # 3. Quote everything and build the query string
-    query_string = urllib.urlencode([(k, argv[k]) for (k) in sorted(argv.keys()) if argv[k]])
+    query_string = "&".join("%s=%s" % (k, urllib.quote(str(argv[k]))) for (k) in sorted(argv.keys()) if argv[k])
 
     netloc = __supportedLocales[getLocale()]
     signature = buildSignature(netloc, query_string)
