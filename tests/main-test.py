@@ -7,8 +7,6 @@ sys.path.append('..')
 import ecs
 
 class ListTest(unittest.TestCase):
-	#def setUp(self):
-	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def dump(self, list):
 		print "ListId: ", list.ListId
@@ -29,8 +27,6 @@ class ListTest(unittest.TestCase):
 		self.assertEqual(lists[0].CustomerName, "Sam")
 
 class QueryTest(unittest.TestCase):
-	#def setUp(self):
-	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def dump(self, book):
 		try:
@@ -56,7 +52,6 @@ class QueryTest(unittest.TestCase):
 class CartTest( unittest.TestCase ):
 	def setUp(self):
 		# prepare the python books to add 
-		#ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 		self.books = ecs.ItemSearch("python", SearchIndex="Books")
 		self.cart = None
 
@@ -123,24 +118,23 @@ class CartTest( unittest.TestCase ):
 		self.failUnless(hasattr(cart, 'SavedForLaterItems'))
 
 class SellerTest(unittest.TestCase):
-	#def setUp(self):
-	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+    # TODO: Need seller ids
+	sellerId = 'A3ENSIQ3ZA4FFN'
+	sellerName = 'abebooks'
 
 	def testSellerLookup(self):
-		# TODO: We need another SellerId here
-		sellers = ecs.SellerLookup(['A3ENSIQ3ZA4FFN'])
-		self.assertEqual(sellers[0].Nickname, 'abebooks')
+		sellers = ecs.SellerLookup([self.sellerId])
+		self.assertEqual(sellers[0].Nickname, self.sellerName)
 
 	def testSellerListingSearch(self):
-		sl = ecs.SellerListingSearch('A3ENSIQ3ZA4FFN', Title='Paperback')
+		sl = ecs.SellerListingSearch(self.sellerId, Title='Paperback')
 		self.assert_(len(sl) > 100, "We are expecting more than 100 results returned")
 		self.assertNotEqual(sl[99], None)
 
 	def testSellerListingLookup(self):
-		sellerId = 'A3ENSIQ3ZA4FFN'
-		sl = ecs.SellerListingSearch(sellerId, Title='Paperback')
+		sl = ecs.SellerListingSearch(self.sellerId)
 		id = sl[0].ListingId
-		sll = ecs.SellerListingLookup(sellerId, id)
+		sll = ecs.SellerListingLookup(self.sellerId, id)
 		self.assert_(len(sll) > 0)
 
 		for x in ['ASIN', 'Condition', 'EndDate', 'ExchangeId', 'ListingId', 'Price', 'Quantity', 'Seller', 'StartDate', 'Status', 'SubCondition', 'Title']:
@@ -148,8 +142,6 @@ class SellerTest(unittest.TestCase):
 		
 
 class CustomerTest(unittest.TestCase):
-	#def setUp(self):
-	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testCustomerContentSearch(self):
 		cs = ecs.CustomerContentSearch('Sam', None, 20)
@@ -157,8 +149,6 @@ class CustomerTest(unittest.TestCase):
 		self.assertEqual(cs[0].CustomerId, 'A2PJ0LTNVGNVGI')
 
 class BrowseNodeLookupTest(unittest.TestCase):
-	#def setUp(self):
-	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testBrowserNodeLookup(self):
 		bnl = ecs.BrowseNodeLookup('1065852', ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
@@ -174,8 +164,6 @@ class BrowseNodeLookupTest(unittest.TestCase):
 		self.assertEqual(bnl[0].NewReleases[1].ASIN, 'B000O321IW')
 
 class HelpTest(unittest.TestCase):
-	#def setUp(self):
-	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testHelp(self):
 		el = ecs.Help(HelpType="Operation", About="CartAdd")
@@ -190,8 +178,6 @@ class HelpTest(unittest.TestCase):
 				
 
 class TransactionLookpuTest(unittest.TestCase):
-	#def setUp(self):
-	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testTransactionLookup(self):
 		el = ecs.TransactionLookup("104-1867480-8536729")
