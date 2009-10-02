@@ -1,3 +1,4 @@
+import re
 import unittest
 import sys
 
@@ -6,8 +7,8 @@ sys.path.append('..')
 import ecs
 
 class ListTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	#def setUp(self):
+	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def dump(self, list):
 		print "ListId: ", list.ListId
@@ -19,8 +20,8 @@ class ListTest(unittest.TestCase):
 		self.assert_(len(lists) > 3)
 		list = lists[0]
 		self.assertNotEqual(list, None)
-		# self.dump(list)
-		self.assert_(list.CustomerName.find("Sam") > -1)
+		#self.dump(list)
+		self.assert_(re.search("sam", list.CustomerName, re.I))
 
 	def testListLookup(self):
 		lists = ecs.ListLookup(ListType="WishList", ListId="13T2CWMCYJI9R")
@@ -28,8 +29,8 @@ class ListTest(unittest.TestCase):
 		self.assertEqual(lists[0].CustomerName, "Sam")
 
 class QueryTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	#def setUp(self):
+	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def dump(self, book):
 		try:
@@ -55,7 +56,7 @@ class QueryTest(unittest.TestCase):
 class CartTest( unittest.TestCase ):
 	def setUp(self):
 		# prepare the python books to add 
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+		#ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 		self.books = ecs.ItemSearch("python", SearchIndex="Books")
 		self.cart = None
 
@@ -122,8 +123,8 @@ class CartTest( unittest.TestCase ):
 		self.failUnless(hasattr(cart, 'SavedForLaterItems'))
 
 class SellerTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	#def setUp(self):
+	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testSellerLookup(self):
 		# TODO: We need another SellerId here
@@ -147,8 +148,8 @@ class SellerTest(unittest.TestCase):
 		
 
 class CustomerTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	#def setUp(self):
+	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testCustomerContentSearch(self):
 		cs = ecs.CustomerContentSearch('Sam', None, 20)
@@ -156,8 +157,8 @@ class CustomerTest(unittest.TestCase):
 		self.assertEqual(cs[0].CustomerId, 'A2PJ0LTNVGNVGI')
 
 class BrowseNodeLookupTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	#def setUp(self):
+	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testBrowserNodeLookup(self):
 		bnl = ecs.BrowseNodeLookup('1065852', ResponseGroup='NewReleases,BrowseNodeInfo,TopSellers')
@@ -173,8 +174,8 @@ class BrowseNodeLookupTest(unittest.TestCase):
 		self.assertEqual(bnl[0].NewReleases[1].ASIN, 'B000O321IW')
 
 class HelpTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	#def setUp(self):
+	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testHelp(self):
 		el = ecs.Help(HelpType="Operation", About="CartAdd")
@@ -189,8 +190,8 @@ class HelpTest(unittest.TestCase):
 				
 
 class TransactionLookpuTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	#def setUp(self):
+	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testTransactionLookup(self):
 		el = ecs.TransactionLookup("104-1867480-8536729")
@@ -210,8 +211,8 @@ class TransactionLookpuTest(unittest.TestCase):
 
 
 class SocketTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
+	#def setUp(self):
+	#	ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def testTimeout(self):
 		import socket
