@@ -5,6 +5,10 @@ import sys
 sys.path.append('..')
 import ecs
 
+def test_suite():
+    from unittest import defaultTestLoader as loader
+    return loader.loadTestsFromName("tests.exception")
+
 class ExceptionsTest( unittest.TestCase ):
 
 	def testBadLicenseKey(self):

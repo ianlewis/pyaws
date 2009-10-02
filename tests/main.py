@@ -6,6 +6,10 @@ import sys
 sys.path.append('..')
 import ecs
 
+def test_suite():
+    from unittest import defaultTestLoader as loader
+    return loader.loadTestsFromName("tests.main")
+
 class ListTest(unittest.TestCase):
 
 	def dump(self, list):

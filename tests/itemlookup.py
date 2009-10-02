@@ -3,6 +3,11 @@ import unittest, sys, pdb
 # quick-n-dirty for debug only
 sys.path.append('..')
 import ecs
+
+def test_suite():
+    from unittest import defaultTestLoader as loader
+    return loader.loadTestsFromName("tests.itemlookup")
+
 class ItemLookupTest(unittest.TestCase):
 	def setUp(self):
 		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");

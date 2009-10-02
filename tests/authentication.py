@@ -5,6 +5,10 @@ import sys
 sys.path.append('..')
 import ecs
 
+def test_suite():
+    from unittest import defaultTestLoader as loader
+    return loader.loadTestsFromName("tests.authentication")
+
 class SettingYourSecretAccessKeyTest( unittest.TestCase ):
     
     def setUp(self):

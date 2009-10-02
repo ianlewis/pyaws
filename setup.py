@@ -1,12 +1,15 @@
-from distutils.core import setup
-from sys import version
-if version < '2.2.3':
+#!/usr/bin/env python
+#:coding=utf-8:
+
+import sys
+
+if sys.version < '2.2.3':
 	from distutils.dist import DistributionMetadata
 	DistributionMetadata.classifiers = None
 	DistributionMetadata.download_url = None
 
-
-setup(name='pyaws',
+METADATA = dict(
+	name='pyaws',
 	version='0.2.1',
 	package_dir={'pyaws': ''},
 	packages=['pyaws'],
@@ -27,3 +30,20 @@ setup(name='pyaws',
 		'Topic :: Internet :: WWW/HTTP',
           ]
 )
+
+SETUPTOOLS_METADATA = dict(
+	test_suite='tests',	
+)
+
+def main():
+	# Use setuptools if available, otherwise fallback and use distutils
+	try:
+		import setuptools
+		METADATA.update(SETUPTOOLS_METADATA)
+		setuptools.setup(**METADATA)
+	except ImportError:
+		import distutils.core
+		distutils.core.setup(**METADATA)
+
+if __name__ == '__main__':
+	main()
