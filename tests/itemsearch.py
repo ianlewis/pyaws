@@ -1,4 +1,5 @@
 import unittest, sys, pdb
+import re
 
 # quick-n-dirty for debug only
 sys.path.append('..')
@@ -9,76 +10,58 @@ def test_suite():
     return loader.loadTestsFromName("tests.itemsearch")
 
 class ItemSearchTest(unittest.TestCase):
-	def setUp(self):
-		ecs.setLicenseKey("1MGVS72Y8JF7EC7JDZG2");
 
 	def assertIsInteger(self, n, message=None):
 		try:
 			int(n)
 		except :
 			fail(message)
+
+	def assertRequest(self, n):
+		self.assertTrue(hasattr(n, "Request"))
+		self.assertTrue(n.Request.isValid)
+	
+	def assertAccessories(self, n):
+		self.assertTrue(hasattr(n, "Accessories"))
+		for a in n.Accessories:
+			self.assertTrue(hasattr(a, "ASIN"))
+			self.assertTrue(hasattr(a, "Title"))
+	
+	def assertBrowseNode(self, n):
+		self.assertTrue(hasattr(n, "BrowseNodes"))
+		for b in n.BrowseNodes:
+			self.assertTrue(hasattr(b, "BrowseNodeId"))
+			self.assertTrue(hasattr(b, "Name"))
+
+	def assertMedium(self, n):
+		self.assertSmall(n)
+		#self.assertRequest(n)
+	
+	def assertSmall(self, n):
+		self.assertTrue(hasattr(n, "ASIN"))
+		self.assertTrue(hasattr(n, "Title"))
+		self.assertTrue(hasattr(n, "ProductGroup"))
 			
 	def testSmall(self):
-		books = ecs.ItemSearch("XML,Python", SearchIndex="Books", ResponseGroup='Request,Small')
-		self.assertEqual(len(books), 7)
-		titles = [u"Web Standards Programmer's Reference : HTML, CSS, JavaScript, Perl, Python, and PHP", u'Python & XML', u'XML Processing with Perl, Python, and PHP', u'Professional Linux Programming', u'XML Processing with Python (with CD-ROM)', u'Xml Processing with Python', u'Xml and Python: Web Development on the Edge']
-		for i, x in enumerate(titles):
-			self.assertEqual(books[i].Title, titles[i])
-
+		books = ecs.ItemSearch("XML Python", SearchIndex="Books", ResponseGroup='Request,Small')
+		for i in range(10):
+			self.assertSmall(books[i])
 
 	def testMedium(self):
-		books = ecs.ItemSearch("XML,Python", SearchIndex="Books", ResponseGroup='Request,Medium')
-		self.assertEqual(len(books), 7)
-		titles = [u"Web Standards Programmer's Reference : HTML, CSS, JavaScript, Perl, Python, and PHP", u'Python & XML', u'XML Processing with Perl, Python, and PHP', u'Professional Linux Programming', u'XML Processing with Python (with CD-ROM)', u'Xml Processing with Python', u'Xml and Python: Web Development on the Edge']
-		for i, x in enumerate(titles):
-			self.assertEqual(books[i].Title, titles[i])
-		book = books[0]
-
-		# EditorialReview
-		self.assertEqual(len(book.EditorialReviews), 1)
-		self.assertEqual(book.EditorialReviews[0].Source, 'Book Description')
-
-		# Images 
-		self.assertEqual(len(book.ImageSets), 1)
-		self.assertEqual(book.ImageSets[0].LargeImage.Height, '500')
-		self.assertEqual(book.ImageSets[0].MediumImage.Height, '160')
-		self.assertEqual(book.ImageSets[0].SmallImage.Height, '75')
-
-		# ItemAttributes
-		pass
-
-		# ItemIds
-		pass
-
-		# OfferSummary
-		self.assertNotEqual(book.OfferSummary.TotalNew, '0')
-		self.assertIsInteger(book.OfferSummary.LowestNewPrice.Amount)
-
-		# SalesRank
-		self.assertNotEqual(book.SalesRank, '0')
+		books = ecs.ItemSearch("XML Python", SearchIndex="Books", ResponseGroup='Request,Medium')
+		for i in range(10):
+			self.assertMedium(books[i])
 
 	def testAccessories(self):
 		# We have to use Palm Tungsten X
 		txs = ecs.ItemSearch('Zen', SearchIndex='Electronics', ResponseGroup='Small,Accessories')
-		self.assert_(len(txs) >= 1)
-		tx = txs[0]
-		self.assertEqual(len(tx.Accessories), 5)
-		self.assertEqual(tx.Accessories[4].Title, 'Sennheiser CX300-B Earbuds (Black)')
+		for i in range(10):
+			self.assertAccessories(txs[i])
 
 	def testBrowseNodes(self):
 		books = ecs.ItemSearch('XML Python', SearchIndex='Books', ResponseGroup='BrowseNodes')
-		self.assert_(len(books) > 1)
-		book = books[0]
-		self.assertEqual(book.ASIN, '0764588206')
-		bn = book.BrowseNodes[0]
-		# iterate all the ancestors
-		names= ('JavaScript', 'Scripting & Programming', 'Web Development', 'Computers & Internet', 'Subjects')
-
-		for x in names:
-			self.assertEqual(bn.Name, x)
-			bn = bn.Ancestors[0]
-
-		self.assertEqual(bn.Name, 'Books')
+		for i in range(10):
+			self.assertBrowseNode(books[i])
 
 	def testLarge(self):
 		# TODO: find Large
