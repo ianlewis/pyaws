@@ -131,6 +131,28 @@ import os, urllib, string, hmac, hashlib
 from datetime import datetime
 from xml.dom import minidom
 
+# python 2.4 compat for hashes
+try:
+    from hashlib import sha1 as sha
+    from hashlib import sha256 as sha256
+    
+    if sys.version[:3] == "2.4":
+        # we are using an hmac that expects a .new() method.
+        class Faker:
+            def __init__(self, which):
+                self.which = which
+                self.digest_size = self.which().digest_size
+            
+            def new(self, *args, **kwargs):
+                return self.which(*args, **kwargs)
+        
+        sha = Faker(sha)
+        sha256 = Faker(sha256)
+
+except ImportError:
+    import sha
+    sha256 = None
+
 
 # Package-wide variables:
 LICENSE_KEY = None
@@ -561,7 +583,7 @@ def buildSignature(netloc,query_string):
     secret_key = getSecretAccessKey()
     string_to_sign = 'GET\n%s\n%s\n%s' % (netloc,'/onca/xml',query_string)
     
-    return urllib.quote_plus(hmac.new(secret_key,string_to_sign,hashlib.sha256).digest().encode('base64').strip())
+    return urllib.quote_plus(hmac.new(secret_key,string_to_sign,sha256).digest().encode('base64').strip())
 
 def buildQuery(argv):
     # 1. Filter any key set to 'None'
