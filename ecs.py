@@ -127,7 +127,7 @@ __license__ = "Python Software Foundation"
 __docformat__ = 'restructuredtext'
 
 
-import os, urllib, string, hmac, hashlib
+import os, urllib, string, hmac, hashlib, sys
 from datetime import datetime
 from xml.dom import minidom
 
