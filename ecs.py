@@ -581,7 +581,7 @@ def buildRequest(argv):
         argv['AWSAccessKeyId'] = getLicenseKey()
     argv.update(getOptions())
     argv.update({'Service':'AWSECommerceService',
-                 'Timestamp':datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
+                 'Timestamp':datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
                  'Version':VERSION})
 
     return buildQuery(argv)
