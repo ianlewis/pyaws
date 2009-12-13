@@ -175,7 +175,8 @@ __supportedLocales = {
 __licenseKeys = (
     (lambda key: key),
     (lambda key: LICENSE_KEY), 
-    (lambda key: os.environ.get('AWS_LICENSE_KEY', None))
+    (lambda key: os.environ.get('AWS_LICENSE_KEY', None)),
+    (lambda key: os.environ.get('AWS_ACCESS_KEY_ID', None))
    )
 
 __secretAccessKeys = (
