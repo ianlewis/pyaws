@@ -18,8 +18,9 @@ class ItemSearchTest(unittest.TestCase):
 			fail(message)
 
 	def assertRequest(self, n):
-		self.assertTrue(hasattr(n, "Request"))
-		self.assertTrue(n.Request.isValid)
+		# Some responses don't seem to have the Request
+		if hasattr(n, "Request"):
+			self.assertTrue(n.Request.isValid)
 	
 	def assertAccessories(self, n):
 		# Accessories may or may not be present.
@@ -33,9 +34,16 @@ class ItemSearchTest(unittest.TestCase):
 			self.assertTrue(hasattr(b, "BrowseNodeId"))
 			self.assertTrue(hasattr(b, "Name"))
 
+	def assertLarge(self, n):
+		self.assertMedium(n)
+		self.assertAccessories(n)
+		self.assertBrowseNode(n)
+
 	def assertMedium(self, n):
 		self.assertSmall(n)
-		#self.assertRequest(n)
+		# Medium objects don't seem to contain the Request Response Group
+		# even though the docs say it should
+		self.assertRequest(n)
 	
 	def assertSmall(self, n):
 		self.assertTrue(hasattr(n, "ASIN"))
@@ -81,7 +89,11 @@ class ItemSearchTest(unittest.TestCase):
 	def testLarge(self):
 		items = ecs.ItemSearch('XML Python', SearchIndex='Books', ResponseGroup='Large')
 		self.assertTrue(items)
-		# TODO: test Large
+		for i in range(20):
+			try:
+				self.assertLarge(items[i])
+			except IndexError:
+				pass
 	
 	def testListmaniaLists(self):
 		# TODO: need to find the item with this attributes
