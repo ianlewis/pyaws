@@ -34,22 +34,26 @@ class ItemSearchTest(unittest.TestCase):
 			self.assertTrue(hasattr(b, "BrowseNodeId"))
 			self.assertTrue(hasattr(b, "Name"))
 
-	def assertLarge(self, n):
-		self.assertMedium(n)
-		self.assertAccessories(n)
-		self.assertBrowseNode(n)
+	def assertOfferFull(self, n):
+		#TODO: test OfferFull
+		pass
 
+	def assertSmall(self, n):
+		self.assertTrue(hasattr(n, "ASIN"))
+		self.assertTrue(hasattr(n, "Title"))
+		self.assertTrue(hasattr(n, "ProductGroup"))
+	
 	def assertMedium(self, n):
 		self.assertSmall(n)
 		# Medium objects don't seem to contain the Request Response Group
 		# even though the docs say it should
 		self.assertRequest(n)
 	
-	def assertSmall(self, n):
-		self.assertTrue(hasattr(n, "ASIN"))
-		self.assertTrue(hasattr(n, "Title"))
-		self.assertTrue(hasattr(n, "ProductGroup"))
-			
+	def assertLarge(self, n):
+		self.assertMedium(n)
+		self.assertAccessories(n)
+		self.assertBrowseNode(n)
+		
 	def testSmall(self):
 		items = ecs.ItemSearch("XML Python", SearchIndex="Books", ResponseGroup='Request,Small')
 		self.assertTrue(items)
@@ -65,6 +69,15 @@ class ItemSearchTest(unittest.TestCase):
 		for i in range(20):
 			try:
 				self.assertMedium(items[i])
+			except IndexError:
+				pass
+
+	def testLarge(self):
+		items = ecs.ItemSearch('XML Python', SearchIndex='Books', ResponseGroup='Large')
+		self.assertTrue(items)
+		for i in range(20):
+			try:
+				self.assertLarge(items[i])
 			except IndexError:
 				pass
 
@@ -86,27 +99,18 @@ class ItemSearchTest(unittest.TestCase):
 			except IndexError:
 				pass
 
-	def testLarge(self):
-		items = ecs.ItemSearch('XML Python', SearchIndex='Books', ResponseGroup='Large')
-		self.assertTrue(items)
-		for i in range(20):
-			try:
-				self.assertLarge(items[i])
-			except IndexError:
-				pass
-	
 	def testListmaniaLists(self):
 		# TODO: need to find the item with this attributes
 		pass
 
 	def testOfferFull(self):
-		books = ecs.ItemSearch('XML Python', SearchIndex='Books', MerchantId='All', ResponseGroup='OfferFull')
-		book = books[0]
-		self.assert_(len(book.Offers) > 10)
-		
-		# arbitary seller
-		self.assertEqual(book.Offers[14].Seller.Nickname, 'a1books-com')
-		self.assertEqual(book.Offers[23].Seller.SellerId, 'A1CJM7P9NE7RE7')
+		items = ecs.ItemSearch('XML Python', SearchIndex='Books', MerchantId='All', ResponseGroup='OfferFull')
+		self.assertTrue(items)
+		for i in range(20):
+			try:
+				self.assertOfferFull(items[i])
+			except IndexError:
+				pass
 
 	def testReviews(self):
 		books = ecs.ItemSearch('XML Python', SearchIndex='Books', MerchantId='All', ResponseGroup='Reviews')
