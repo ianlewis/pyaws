@@ -10,7 +10,7 @@ if sys.version < '2.2.3':
 
 METADATA = dict(
 	name='pyaws',
-	version='0.2.1',
+	version='0.2.2',
 	package_dir={'pyaws': ''},
 	packages=['pyaws'],
 	author='Kun Xi',
