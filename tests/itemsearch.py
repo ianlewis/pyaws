@@ -1,4 +1,4 @@
-import unittest, sys, pdb
+import unittest, sys
 import re
 
 # quick-n-dirty for debug only
@@ -22,8 +22,8 @@ class ItemSearchTest(unittest.TestCase):
 		self.assertTrue(n.Request.isValid)
 	
 	def assertAccessories(self, n):
-		self.assertTrue(hasattr(n, "Accessories"))
-		for a in n.Accessories:
+		# Accessories may or may not be present.
+		for a in getattr(n, "Accessories", []):
 			self.assertTrue(hasattr(a, "ASIN"))
 			self.assertTrue(hasattr(a, "Title"))
 	
@@ -43,30 +43,45 @@ class ItemSearchTest(unittest.TestCase):
 		self.assertTrue(hasattr(n, "ProductGroup"))
 			
 	def testSmall(self):
-		books = ecs.ItemSearch("XML Python", SearchIndex="Books", ResponseGroup='Request,Small')
-		for i in range(10):
-			self.assertSmall(books[i])
+		items = ecs.ItemSearch("XML Python", SearchIndex="Books", ResponseGroup='Request,Small')
+		self.assertTrue(items)
+		for i in range(20):
+			try:
+				self.assertSmall(items[i])
+			except IndexError:
+				pass
 
 	def testMedium(self):
-		books = ecs.ItemSearch("XML Python", SearchIndex="Books", ResponseGroup='Request,Medium')
-		for i in range(10):
-			self.assertMedium(books[i])
+		items = ecs.ItemSearch("XML Python", SearchIndex="Books", ResponseGroup='Request,Medium')
+		self.assertTrue(items)
+		for i in range(20):
+			try:
+				self.assertMedium(items[i])
+			except IndexError:
+				pass
 
 	def testAccessories(self):
 		# We have to use Palm Tungsten X
-		txs = ecs.ItemSearch('Zen', SearchIndex='Electronics', ResponseGroup='Small,Accessories')
-		for i in range(10):
-			self.assertAccessories(txs[i])
+		items = ecs.ItemSearch('Zen', SearchIndex='Electronics', ResponseGroup='Small,Accessories')
+		for i in range(20):
+			try:
+				self.assertAccessories(items[i])
+			except IndexError:
+				pass
 
 	def testBrowseNodes(self):
-		books = ecs.ItemSearch('XML Python', SearchIndex='Books', ResponseGroup='BrowseNodes')
-		for i in range(10):
-			self.assertBrowseNode(books[i])
+		items = ecs.ItemSearch('XML Python', SearchIndex='Books', ResponseGroup='BrowseNodes')
+		self.assertTrue(items)
+		for i in range(20):
+			try:
+				self.assertBrowseNode(items[i])
+			except IndexError:
+				pass
 
 	def testLarge(self):
-		# TODO: find Large
-		books = ecs.ItemSearch('XML Python', SearchIndex='Books', ResponseGroup='Large')
-		pass
+		items = ecs.ItemSearch('XML Python', SearchIndex='Books', ResponseGroup='Large')
+		self.assertTrue(items)
+		# TODO: test Large
 	
 	def testListmaniaLists(self):
 		# TODO: need to find the item with this attributes
